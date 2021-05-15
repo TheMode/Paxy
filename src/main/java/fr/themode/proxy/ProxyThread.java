@@ -30,6 +30,11 @@ public class ProxyThread {
                     SelectionKey key = iter.next();
 
                     SocketChannel channel = (SocketChannel) key.channel();
+                    if (!channel.isOpen()) {
+                        iter.remove();
+                        continue;
+                    }
+
                     if (key.isReadable()) {
                         var target = channelMap.get(channel);
                         try {
