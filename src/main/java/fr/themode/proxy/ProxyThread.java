@@ -12,12 +12,12 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class ProxyThread {
 
-    private final Map<SocketChannel, SocketChannel> channelMap = new ConcurrentHashMap<>();
+    private final Map<SocketChannel, Context> channelMap = new ConcurrentHashMap<>();
     private final Selector selector = Selector.open();
 
     public ProxyThread() throws IOException {
         Thread thread = new Thread(() -> {
-            ByteBuffer buffer = ByteBuffer.allocate(32767);
+            ByteBuffer buffer = ByteBuffer.allocate(1_000_000);
             while (true) {
                 try {
                     selector.select();
@@ -36,13 +36,13 @@ public class ProxyThread {
                     }
 
                     if (key.isReadable()) {
-                        var target = channelMap.get(channel);
+                        var context = channelMap.get(channel);
+                        var target = context.getTarget();
                         try {
                             int length;
                             while ((length = channel.read(buffer)) > 0) {
-                                //System.out.println("length " + length);
                                 buffer.flip();
-                                target.write(buffer);
+                                context.processPackets(target, buffer, length);
                                 buffer.clear();
                             }
                         } catch (IOException e) {
@@ -66,8 +66,8 @@ public class ProxyThread {
     }
 
     public void receiveConnection(SocketChannel clientChannel, SocketChannel serverChannel) throws IOException {
-        this.channelMap.put(clientChannel, serverChannel);
-        this.channelMap.put(serverChannel, clientChannel);
+        this.channelMap.put(clientChannel, new Context(serverChannel, ConnectionType.CLIENT));
+        this.channelMap.put(serverChannel, new Context(clientChannel, ConnectionType.SERVER));
 
         final int interest = SelectionKey.OP_READ;
 

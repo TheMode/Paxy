@@ -15,8 +15,8 @@ public class Server {
 
     private static final int THREAD_COUNT = Runtime.getRuntime().availableProcessors();
 
-    private static final InetSocketAddress PROXY_ADDRESS = new InetSocketAddress("localhost", 25566);
-    private static final InetSocketAddress TARGET_ADDRESS = new InetSocketAddress("localhost", 25565);
+    private static final InetSocketAddress PROXY_ADDRESS = new InetSocketAddress("0.0.0.0", 25566);
+    private static final InetSocketAddress TARGET_ADDRESS = new InetSocketAddress("0.0.0.0", 25565);
 
     private final List<ProxyThread> threads = new ArrayList<>(THREAD_COUNT);
     private int index;
