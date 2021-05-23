@@ -12,6 +12,7 @@ public class Context {
 
     private final SocketChannel target;
     private final ConnectionType connectionType;
+    private ConnectionState connectionState = ConnectionState.UNKNOWN;
 
     private ByteBuffer cacheBuffer;
 
@@ -21,19 +22,16 @@ public class Context {
     }
 
     public void processPackets(SocketChannel channel, ByteBuffer readBuffer, ByteBuffer writeBuffer) {
-        //System.out.println("process " + readLength + " " + contextBuffer.getByteBuffer() + " " + connectionType);
-
         // Read all packets
         while (readBuffer.remaining() > 0) {
             readBuffer.mark();
             try {
-                //System.out.println("Start protocol read " + contextBuffer.getByteBuffer());
+                // Read packet
                 final int length = BufferUtils.readVarInt(readBuffer);
-                //System.out.println("payload length: " + length + " buffer: " + contextBuffer.getByteBuffer());
                 final byte[] data = BufferUtils.getBytes(readBuffer, length);
-
                 readPayload(ByteBuffer.wrap(data));
 
+                // Write to cache or socket if full
                 try {
                     final int end = readBuffer.position();
                     readBuffer.reset();
