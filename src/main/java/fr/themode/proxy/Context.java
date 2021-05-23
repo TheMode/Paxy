@@ -12,46 +12,49 @@ public class Context {
     private final SocketChannel target;
     private final ConnectionType connectionType;
 
-    private final ByteBuffer contextBuffer = ByteBuffer.allocateDirect(Server.BUFFER).limit(0);
+    private ByteBuffer cacheBuffer;
 
     public Context(SocketChannel target, ConnectionType connectionType) {
         this.target = target;
         this.connectionType = connectionType;
     }
 
-    public void processPackets(SocketChannel channel, ByteBuffer buffer, int readLength) {
-        BufferUtils.append(contextBuffer, buffer, readLength);
+    public void processPackets(SocketChannel channel, ByteBuffer buffer) {
+        //System.out.println("read "+buffer);
         //System.out.println("process " + readLength + " " + contextBuffer.getByteBuffer() + " " + connectionType);
 
-        while (contextBuffer.remaining() > 0) {
-            contextBuffer.mark();
+        while (buffer.remaining() > 0) {
+            buffer.mark();
             try {
                 //System.out.println("Start protocol read " + contextBuffer.getByteBuffer());
-                final int length = BufferUtils.readVarInt(contextBuffer);
+                final int length = BufferUtils.readVarInt(buffer);
                 //System.out.println("payload length: " + length + " buffer: " + contextBuffer.getByteBuffer());
-                final byte[] data = BufferUtils.getBytes(contextBuffer, length);
+                final byte[] data = BufferUtils.getBytes(buffer, length);
 
                 readPayload(ByteBuffer.wrap(data));
 
                 try {
-                    final int end = contextBuffer.position();
-                    contextBuffer.reset();
+                    final int end = buffer.position();
+                    buffer.reset();
 
-                    var slice = contextBuffer.duplicate().limit(end).slice();
+                    var slice = buffer.duplicate().limit(end).slice();
 
                     // Block write
                     while (slice.position() != slice.limit()) {
                         channel.write(slice);
                     }
 
-                    contextBuffer.position(end); // Continue...
+                    buffer.position(end); // Continue...
                 } catch (IOException e) {
                     // Connection probably closed
-                    contextBuffer.reset();
+                    //System.out.println("error2");
+                    buffer.reset();
                     break;
                 }
             } catch (BufferUnderflowException e) {
-                BufferUtils.compact(contextBuffer);
+                buffer.reset();
+                this.cacheBuffer = ByteBuffer.allocateDirect(buffer.remaining());
+                cacheBuffer.put(buffer).flip();
                 break;
             }
         }
@@ -64,5 +67,13 @@ public class Context {
 
     public SocketChannel getTarget() {
         return target;
+    }
+
+    public void consumeCache(ByteBuffer buffer) {
+        if (cacheBuffer == null) {
+            return;
+        }
+        buffer.put(cacheBuffer);
+        this.cacheBuffer = null;
     }
 }

@@ -50,12 +50,27 @@ public class ProxyThread {
                 var context = channelMap.get(channel);
                 var target = context.getTarget();
                 try {
-                    int length;
-                    while ((length = channel.read(buffer)) > 0) {
-                        buffer.flip();
-                        context.processPackets(target, buffer, length);
-                        buffer.clear();
+
+                    // Consume last incomplete packet
+                    context.consumeCache(buffer);
+
+                    // Read socket
+                    while (buffer.position() < buffer.limit()) {
+                        final int length = channel.read(buffer);
+                        if (length == 0) {
+                            // Nothing to read
+                            break;
+                        }
+                        if (length == -1) {
+                            // EOS
+                            throw new IOException("Disconnected");
+                        }
                     }
+
+                    // Process data
+                    buffer.flip();
+                    context.processPackets(target, buffer);
+                    buffer.clear();
                 } catch (IOException e) {
                     e.printStackTrace();
                     try {
