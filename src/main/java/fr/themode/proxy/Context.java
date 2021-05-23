@@ -3,7 +3,6 @@ package fr.themode.proxy;
 import fr.themode.proxy.buffer.BufferUtils;
 
 import java.io.IOException;
-import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.util.Arrays;
@@ -51,7 +50,8 @@ public class Context {
                     contextBuffer.reset();
                     break;
                 }
-            } catch (BufferUnderflowException e) {
+            } catch (RuntimeException e) {
+                // Probably a buffer underflow
                 BufferUtils.compact(contextBuffer);
                 break;
             }
