@@ -14,7 +14,8 @@ import java.util.Set;
 public class Server {
 
     public static final int THREAD_COUNT = Integer.getInteger("proxy.threads", Runtime.getRuntime().availableProcessors());
-    public static final int BUFFER = Integer.getInteger("proxy.buffer", 2097151);
+    public static final int THREAD_READ_BUFFER = Integer.getInteger("proxy.thread-read-buffer", 262143);
+    public static final int THREAD_WRITE_BUFFER = Integer.getInteger("proxy.thread-write-buffer", 262143);
     public static final int SELECTOR_TIMER = Integer.getInteger("proxy.timer", 50);
 
     private static final InetSocketAddress PROXY_ADDRESS = new InetSocketAddress("0.0.0.0", 25566);

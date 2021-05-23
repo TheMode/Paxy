@@ -3,6 +3,7 @@ package fr.themode.proxy;
 import fr.themode.proxy.buffer.BufferUtils;
 
 import java.io.IOException;
+import java.nio.BufferOverflowException;
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
@@ -19,44 +20,52 @@ public class Context {
         this.connectionType = connectionType;
     }
 
-    public void processPackets(SocketChannel channel, ByteBuffer buffer) {
-        //System.out.println("read "+buffer);
+    public void processPackets(SocketChannel channel, ByteBuffer readBuffer, ByteBuffer writeBuffer) {
         //System.out.println("process " + readLength + " " + contextBuffer.getByteBuffer() + " " + connectionType);
 
-        while (buffer.remaining() > 0) {
-            buffer.mark();
+        // Read all packets
+        while (readBuffer.remaining() > 0) {
+            readBuffer.mark();
             try {
                 //System.out.println("Start protocol read " + contextBuffer.getByteBuffer());
-                final int length = BufferUtils.readVarInt(buffer);
+                final int length = BufferUtils.readVarInt(readBuffer);
                 //System.out.println("payload length: " + length + " buffer: " + contextBuffer.getByteBuffer());
-                final byte[] data = BufferUtils.getBytes(buffer, length);
+                final byte[] data = BufferUtils.getBytes(readBuffer, length);
 
                 readPayload(ByteBuffer.wrap(data));
 
                 try {
-                    final int end = buffer.position();
-                    buffer.reset();
-
-                    var slice = buffer.duplicate().limit(end).slice();
+                    final int end = readBuffer.position();
+                    readBuffer.reset();
 
                     // Block write
-                    while (slice.position() != slice.limit()) {
-                        channel.write(slice);
+                    var slice = readBuffer.duplicate().limit(end).slice();
+                    try {
+                        writeBuffer.put(slice);
+                    } catch (BufferOverflowException e) {
+                        write(channel, slice);
                     }
 
-                    buffer.position(end); // Continue...
+                    readBuffer.position(end); // Continue...
                 } catch (IOException e) {
                     // Connection probably closed
                     //System.out.println("error2");
-                    buffer.reset();
+                    readBuffer.reset();
                     break;
                 }
             } catch (BufferUnderflowException e) {
-                buffer.reset();
-                this.cacheBuffer = ByteBuffer.allocateDirect(buffer.remaining());
-                cacheBuffer.put(buffer).flip();
+                readBuffer.reset();
+                this.cacheBuffer = ByteBuffer.allocateDirect(readBuffer.remaining());
+                this.cacheBuffer.put(readBuffer).flip();
                 break;
             }
+        }
+
+        // Write remaining
+        try {
+            write(channel, writeBuffer.flip());
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
@@ -75,5 +84,11 @@ public class Context {
         }
         buffer.put(cacheBuffer);
         this.cacheBuffer = null;
+    }
+
+    private void write(SocketChannel channel, ByteBuffer buffer) throws IOException {
+        while (buffer.position() != buffer.limit()) {
+            channel.write(buffer);
+        }
     }
 }

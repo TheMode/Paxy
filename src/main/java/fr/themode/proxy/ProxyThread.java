@@ -17,7 +17,8 @@ public class ProxyThread {
     private final Map<SocketChannel, Context> channelMap = new ConcurrentHashMap<>();
     private final Selector selector = Selector.open();
 
-    private final ByteBuffer buffer = ByteBuffer.allocateDirect(Server.BUFFER);
+    private final ByteBuffer readBuffer = ByteBuffer.allocateDirect(Server.THREAD_READ_BUFFER);
+    private final ByteBuffer writeBuffer = ByteBuffer.allocateDirect(Server.THREAD_WRITE_BUFFER);
 
     public ProxyThread() throws IOException {
         Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(() -> {
@@ -52,11 +53,11 @@ public class ProxyThread {
                 try {
 
                     // Consume last incomplete packet
-                    context.consumeCache(buffer);
+                    context.consumeCache(readBuffer);
 
                     // Read socket
-                    while (buffer.position() < buffer.limit()) {
-                        final int length = channel.read(buffer);
+                    while (readBuffer.position() < readBuffer.limit()) {
+                        final int length = channel.read(readBuffer);
                         if (length == 0) {
                             // Nothing to read
                             break;
@@ -68,9 +69,10 @@ public class ProxyThread {
                     }
 
                     // Process data
-                    buffer.flip();
-                    context.processPackets(target, buffer);
-                    buffer.clear();
+                    readBuffer.flip();
+                    context.processPackets(target, readBuffer, writeBuffer);
+                    readBuffer.clear();
+                    writeBuffer.clear();
                 } catch (IOException e) {
                     e.printStackTrace();
                     try {
