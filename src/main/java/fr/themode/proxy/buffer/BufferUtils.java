@@ -4,9 +4,8 @@ import java.nio.ByteBuffer;
 
 public class BufferUtils {
 
-    public static int readVarInt(ByteBuffer byteBuffer) {
+    public static int readVarInt(ByteBuffer byteBuffer, int maxRead) {
         int i = 0;
-        final int maxRead = Math.min(5, byteBuffer.remaining());
         for (int j = 0; j < maxRead; j++) {
             final int k = byteBuffer.get();
             i |= (k & 0x7F) << j * 7;
@@ -15,6 +14,10 @@ public class BufferUtils {
             }
         }
         throw new RuntimeException("VarInt is too big");
+    }
+
+    public static int readVarInt(ByteBuffer byteBuffer) {
+        return readVarInt(byteBuffer, 3);
     }
 
     public static byte[] getBytes(ByteBuffer byteBuffer, int length) {

@@ -17,51 +17,60 @@ public class ProxyThread {
     private final Map<SocketChannel, Context> channelMap = new ConcurrentHashMap<>();
     private final Selector selector = Selector.open();
 
+    private final ByteBuffer buffer = ByteBuffer.allocateDirect(Server.BUFFER);
+
     public ProxyThread() throws IOException {
-        ByteBuffer buffer = ByteBuffer.allocateDirect(Server.BUFFER);
         Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(() -> {
             try {
-                selector.select();
-            } catch (IOException e) {
+                threadTick();
+            } catch (Exception e) {
                 e.printStackTrace();
             }
-            Set<SelectionKey> selectedKeys = selector.selectedKeys();
-            Iterator<SelectionKey> iter = selectedKeys.iterator();
-            while (iter.hasNext()) {
-                SelectionKey key = iter.next();
+        }, 0, Server.SELECTOR_TIMER, TimeUnit.MILLISECONDS);
+    }
 
-                SocketChannel channel = (SocketChannel) key.channel();
-                if (!channel.isOpen()) {
-                    iter.remove();
-                    continue;
-                }
+    private void threadTick() {
+        try {
+            selector.select();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        Set<SelectionKey> selectedKeys = selector.selectedKeys();
+        Iterator<SelectionKey> iter = selectedKeys.iterator();
+        while (iter.hasNext()) {
+            SelectionKey key = iter.next();
 
-                if (key.isReadable()) {
-                    var context = channelMap.get(channel);
-                    var target = context.getTarget();
+            SocketChannel channel = (SocketChannel) key.channel();
+            if (!channel.isOpen()) {
+                iter.remove();
+                continue;
+            }
+
+            if (key.isReadable()) {
+                var context = channelMap.get(channel);
+                var target = context.getTarget();
+                try {
+                    int length;
+                    while ((length = channel.read(buffer)) > 0) {
+                        buffer.flip();
+                        context.processPackets(target, buffer, length);
+                        buffer.clear();
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
                     try {
-                        int length;
-                        while ((length = channel.read(buffer)) > 0) {
-                            buffer.flip();
-                            context.processPackets(target, buffer, length);
-                            buffer.clear();
-                        }
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                        try {
-                            // Client close
-                            channel.close();
-                            target.close();
-                            channelMap.remove(channel);
-                            channelMap.remove(target);
-                        } catch (IOException ioException) {
-                            ioException.printStackTrace();
-                        }
+                        // Client close
+                        channel.close();
+                        target.close();
+                        channelMap.remove(channel);
+                        channelMap.remove(target);
+                    } catch (IOException ioException) {
+                        ioException.printStackTrace();
                     }
                 }
-                iter.remove();
             }
-        }, 0, Server.SELECTOR_TIMER, TimeUnit.MILLISECONDS);
+            iter.remove();
+        }
     }
 
     public void receiveConnection(SocketChannel clientChannel, SocketChannel serverChannel) throws IOException {

@@ -3,9 +3,9 @@ package fr.themode.proxy;
 import fr.themode.proxy.buffer.BufferUtils;
 
 import java.io.IOException;
+import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
-import java.util.Arrays;
 
 public class Context {
 
@@ -50,8 +50,7 @@ public class Context {
                     contextBuffer.reset();
                     break;
                 }
-            } catch (RuntimeException e) {
-                // Probably a buffer underflow
+            } catch (BufferUnderflowException e) {
                 BufferUtils.compact(contextBuffer);
                 break;
             }
@@ -65,13 +64,5 @@ public class Context {
 
     public SocketChannel getTarget() {
         return target;
-    }
-
-    private static String print(ByteBuffer byteBuffer) {
-        byteBuffer.mark();
-        byte[] bytes = new byte[byteBuffer.remaining()];
-        byteBuffer.get(bytes);
-        byteBuffer.reset();
-        return Arrays.toString(bytes);
     }
 }
