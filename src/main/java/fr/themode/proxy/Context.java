@@ -43,13 +43,13 @@ public class Context {
                     try {
                         writeBuffer.put(slice);
                     } catch (BufferOverflowException e) {
+                        write(channel, writeBuffer.flip());
                         write(channel, slice);
                     }
 
                     readBuffer.position(end); // Continue...
                 } catch (IOException e) {
                     // Connection probably closed
-                    //System.out.println("error2");
                     readBuffer.reset();
                     break;
                 }
@@ -62,10 +62,12 @@ public class Context {
         }
 
         // Write remaining
-        try {
-            write(channel, writeBuffer.flip());
-        } catch (IOException e) {
-            e.printStackTrace();
+        if (writeBuffer.position() > 0) {
+            try {
+                write(channel, writeBuffer.flip());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
