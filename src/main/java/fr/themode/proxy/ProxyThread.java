@@ -17,7 +17,7 @@ public class ProxyThread {
 
     public ProxyThread() throws IOException {
         Thread thread = new Thread(() -> {
-            ByteBuffer buffer = ByteBuffer.allocate(1_000_000);
+            ByteBuffer buffer = ByteBuffer.allocate(Server.BUFFER);
             while (true) {
                 try {
                     selector.select();
