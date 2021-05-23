@@ -39,8 +39,8 @@ public class Buffer {
 
     public void append(ByteBuffer buffer, int length) {
         // Append to buffer, keep same position
-        int positionCache = byteBuffer.position();
-        int limitCache = byteBuffer.limit();
+        final int positionCache = byteBuffer.position();
+        final int limitCache = byteBuffer.limit();
         //System.out.println("append start " + byteBuffer + " " + length);
         this.byteBuffer.position(limitCache).limit(limitCache + length);
         //System.out.println("limit "+byteBuffer.remaining()+" "+byteBuffer.limit());
@@ -50,11 +50,9 @@ public class Buffer {
 
     public void compact() {
         // Create a new buffer with indexes [0;remaining]
-        //System.out.println("prev buffer " + byteBuffer);
-        byteBuffer.reset();
-        byteBuffer.compact();
-        byteBuffer.limit(byteBuffer.position()).position(0);
-        //System.out.println("reduced " + byteBuffer);
+        System.out.println("prev buffer " + byteBuffer);
+        this.byteBuffer.reset().compact().flip();
+        System.out.println("reduced " + byteBuffer);
     }
 
     public int position() {
