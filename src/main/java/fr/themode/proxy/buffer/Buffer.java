@@ -50,9 +50,7 @@ public class Buffer {
 
     public void compact() {
         // Create a new buffer with indexes [0;remaining]
-        System.out.println("prev buffer " + byteBuffer);
         this.byteBuffer.reset().compact().flip();
-        System.out.println("reduced " + byteBuffer);
     }
 
     public int position() {
