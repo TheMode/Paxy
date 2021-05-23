@@ -12,7 +12,7 @@ public class Context {
     private final SocketChannel target;
     private final ConnectionType connectionType;
 
-    private final ByteBuffer contextBuffer = ByteBuffer.allocate(Server.BUFFER).limit(0);
+    private final ByteBuffer contextBuffer = ByteBuffer.allocateDirect(Server.BUFFER).limit(0);
 
     public Context(SocketChannel target, ConnectionType connectionType) {
         this.target = target;

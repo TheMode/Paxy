@@ -18,7 +18,7 @@ public class ProxyThread {
     private final Selector selector = Selector.open();
 
     public ProxyThread() throws IOException {
-        ByteBuffer buffer = ByteBuffer.allocate(Server.BUFFER);
+        ByteBuffer buffer = ByteBuffer.allocateDirect(Server.BUFFER);
         Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(() -> {
             try {
                 selector.select();
