@@ -29,7 +29,7 @@ public class Context {
         this.handler = handler;
     }
 
-    public void processPackets(SocketChannel channel, ByteBuffer readBuffer, ByteBuffer writeBuffer, ByteBuffer compressionBuffer) {
+    public void processPackets(SocketChannel channel, ByteBuffer readBuffer, ByteBuffer writeBuffer, ByteBuffer contentBuffer) {
         // Read all packets
         while (readBuffer.remaining() > 0) {
             readBuffer.mark();
@@ -40,7 +40,7 @@ public class Context {
                 try {
                     // Retrieve payload buffer
                     ByteBuffer payload = readBuffer.duplicate().slice().limit(packetLength);
-                    processPacket(payload, packetLength, compressionBuffer);
+                    processPacket(payload, packetLength, contentBuffer);
                 } catch (IllegalArgumentException e) {
                     // Incomplete packet
                     throw new BufferUnderflowException();
@@ -91,7 +91,7 @@ public class Context {
         }
     }
 
-    private void processPacket(ByteBuffer buffer, int length, ByteBuffer compressionBuffer) throws BufferUnderflowException {
+    private void processPacket(ByteBuffer buffer, int length, ByteBuffer contentBuffer) throws BufferUnderflowException {
         if (compression) {
             int position = buffer.position();
             final int dataLength = BufferUtils.readVarInt(buffer);
@@ -99,21 +99,24 @@ public class Context {
             if (dataLength == 0) {
                 // Uncompressed
                 int size = buffer.position() - position;
-                final byte[] data = BufferUtils.getBytes(buffer, length - size);
-                handler.read(this, ByteBuffer.wrap(data));
+
+                var content = contentBuffer.slice().limit(length - size);
+                content.put(buffer).flip();
+                handler.read(this, content);
             } else {
                 // Compressed
                 try {
                     var compressed = buffer.slice();
-                     CompressionUtils.decompress(compressed, dataLength, compressionBuffer);
-                    handler.read(this, compressionBuffer);
+                    CompressionUtils.decompress(compressed, dataLength, contentBuffer);
+                    handler.read(this, contentBuffer);
                 } catch (DataFormatException e) {
                     e.printStackTrace();
                 }
             }
         } else {
-            final byte[] data = BufferUtils.getBytes(buffer, length);
-            handler.read(this, ByteBuffer.wrap(data));
+            var content = contentBuffer.slice().limit(length);
+            content.put(buffer).flip();
+            handler.read(this, content);
         }
     }
 

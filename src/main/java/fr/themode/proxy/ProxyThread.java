@@ -22,7 +22,7 @@ public class ProxyThread {
 
     private final ByteBuffer readBuffer = ByteBuffer.allocateDirect(Server.THREAD_READ_BUFFER);
     private final ByteBuffer writeBuffer = ByteBuffer.allocateDirect(Server.THREAD_WRITE_BUFFER);
-    private final ByteBuffer compressionBuffer = ByteBuffer.allocateDirect(Server.THREAD_COMPRESSION_BUFFER);
+    private final ByteBuffer contentBuffer = ByteBuffer.allocateDirect(Server.THREAD_CONTENT_BUFFER);
 
     public ProxyThread() throws IOException {
         Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(() -> {
@@ -74,7 +74,7 @@ public class ProxyThread {
 
                     // Process data
                     readBuffer.flip();
-                    context.processPackets(target, readBuffer, writeBuffer, compressionBuffer);
+                    context.processPackets(target, readBuffer, writeBuffer, contentBuffer);
                     readBuffer.clear();
                     writeBuffer.clear();
                 } catch (IOException e) {
