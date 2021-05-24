@@ -75,8 +75,6 @@ public class ProxyThread {
                     // Process data
                     readBuffer.flip();
                     context.processPackets(target, readBuffer, writeBuffer, contentBuffer);
-                    readBuffer.clear();
-                    writeBuffer.clear();
                 } catch (IOException e) {
                     e.printStackTrace();
                     try {
@@ -88,6 +86,10 @@ public class ProxyThread {
                     } catch (IOException ioException) {
                         ioException.printStackTrace();
                     }
+                } finally {
+                    readBuffer.clear();
+                    writeBuffer.clear();
+                    contentBuffer.clear();
                 }
             }
             iter.remove();
