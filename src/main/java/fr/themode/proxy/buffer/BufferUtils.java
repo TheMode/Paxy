@@ -19,10 +19,4 @@ public class BufferUtils {
     public static int readVarInt(ByteBuffer byteBuffer) {
         return readVarInt(byteBuffer, 3);
     }
-
-    public static byte[] getBytes(ByteBuffer byteBuffer, int length) {
-        byte[] data = new byte[length];
-        byteBuffer.get(data);
-        return data;
-    }
 }

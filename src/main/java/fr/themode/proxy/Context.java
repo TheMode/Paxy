@@ -39,7 +39,7 @@ public class Context {
 
                 try {
                     // Retrieve payload buffer
-                    ByteBuffer payload = readBuffer.duplicate().slice().limit(packetLength);
+                    ByteBuffer payload = readBuffer.slice().limit(packetLength);
                     processPacket(payload, packetLength, contentBuffer);
                 } catch (IllegalArgumentException e) {
                     // Incomplete packet
@@ -59,7 +59,8 @@ public class Context {
                     readBuffer.reset();
 
                     // Block write
-                    var slice = readBuffer.duplicate().limit(end).slice();
+                    final int size = end - readBuffer.position();
+                    var slice = readBuffer.slice().limit(size);
                     try {
                         writeBuffer.put(slice);
                     } catch (BufferOverflowException e) {
