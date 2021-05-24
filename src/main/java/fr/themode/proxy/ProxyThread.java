@@ -1,5 +1,8 @@
 package fr.themode.proxy;
 
+import fr.themode.proxy.protocol.ClientHandler;
+import fr.themode.proxy.protocol.ServerHandler;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
@@ -19,6 +22,7 @@ public class ProxyThread {
 
     private final ByteBuffer readBuffer = ByteBuffer.allocateDirect(Server.THREAD_READ_BUFFER);
     private final ByteBuffer writeBuffer = ByteBuffer.allocateDirect(Server.THREAD_WRITE_BUFFER);
+    private final ByteBuffer compressionBuffer = ByteBuffer.allocateDirect(Server.THREAD_COMPRESSION_BUFFER);
 
     public ProxyThread() throws IOException {
         Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(() -> {
@@ -70,7 +74,7 @@ public class ProxyThread {
 
                     // Process data
                     readBuffer.flip();
-                    context.processPackets(target, readBuffer, writeBuffer);
+                    context.processPackets(target, readBuffer, writeBuffer, compressionBuffer);
                     readBuffer.clear();
                     writeBuffer.clear();
                 } catch (IOException e) {
@@ -91,8 +95,14 @@ public class ProxyThread {
     }
 
     public void receiveConnection(SocketChannel clientChannel, SocketChannel serverChannel) throws IOException {
-        this.channelMap.put(clientChannel, new Context(serverChannel, ConnectionType.CLIENT));
-        this.channelMap.put(serverChannel, new Context(clientChannel, ConnectionType.SERVER));
+        var clientContext = new Context(serverChannel, new ClientHandler());
+        var serverContext = new Context(clientChannel, new ServerHandler());
+
+        clientContext.targetContext = serverContext;
+        serverContext.targetContext = clientContext;
+
+        this.channelMap.put(clientChannel, clientContext);
+        this.channelMap.put(serverChannel, serverContext);
 
         final int interest = SelectionKey.OP_READ;
 

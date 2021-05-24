@@ -1,35 +1,57 @@
 package fr.themode.proxy;
 
 import fr.themode.proxy.buffer.BufferUtils;
+import fr.themode.proxy.protocol.ProtocolHandler;
+import fr.themode.proxy.utils.CompressionUtils;
 
 import java.io.IOException;
 import java.nio.BufferOverflowException;
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
+import java.util.zip.DataFormatException;
 
 public class Context {
 
     private final SocketChannel target;
-    private final ConnectionType connectionType;
+    private final ProtocolHandler handler;
     private ConnectionState connectionState = ConnectionState.UNKNOWN;
+
+    private boolean compression = false;
+    private int compressionThreshold = 0;
 
     private ByteBuffer cacheBuffer;
 
-    public Context(SocketChannel target, ConnectionType connectionType) {
+    protected Context targetContext;
+
+    public Context(SocketChannel target, ProtocolHandler handler) {
         this.target = target;
-        this.connectionType = connectionType;
+        this.handler = handler;
     }
 
-    public void processPackets(SocketChannel channel, ByteBuffer readBuffer, ByteBuffer writeBuffer) {
+    public void processPackets(SocketChannel channel, ByteBuffer readBuffer, ByteBuffer writeBuffer, ByteBuffer compressionBuffer) {
         // Read all packets
         while (readBuffer.remaining() > 0) {
             readBuffer.mark();
             try {
                 // Read packet
-                final int length = BufferUtils.readVarInt(readBuffer);
-                final byte[] data = BufferUtils.getBytes(readBuffer, length);
-                readPayload(ByteBuffer.wrap(data));
+                final int packetLength = BufferUtils.readVarInt(readBuffer);
+
+                try {
+                    // Retrieve payload buffer
+                    ByteBuffer payload = readBuffer.duplicate().slice().limit(packetLength);
+                    processPacket(payload, packetLength, compressionBuffer);
+                } catch (IllegalArgumentException e) {
+                    // Incomplete packet
+                    throw new BufferUnderflowException();
+                }
+
+                try {
+                    readBuffer.position(readBuffer.position() + packetLength); // Skip payload
+                } catch (IllegalArgumentException e) {
+                    // Incomplete packet
+                    throw new BufferUnderflowException();
+                }
 
                 // Write to cache or socket if full
                 try {
@@ -69,13 +91,38 @@ public class Context {
         }
     }
 
-    private void readPayload(ByteBuffer payload) {
-        final int packetId = BufferUtils.readVarInt(payload);
-        //System.out.println("Packet ID " + Integer.toHexString(packetId));
+    private void processPacket(ByteBuffer buffer, int length, ByteBuffer compressionBuffer) throws BufferUnderflowException {
+        if (compression) {
+            int position = buffer.position();
+            final int dataLength = BufferUtils.readVarInt(buffer);
+
+            if (dataLength == 0) {
+                // Uncompressed
+                int size = buffer.position() - position;
+                final byte[] data = BufferUtils.getBytes(buffer, length - size);
+                handler.read(this, ByteBuffer.wrap(data));
+            } else {
+                // Compressed
+                try {
+                    var compressed = buffer.slice();
+                     CompressionUtils.decompress(compressed, dataLength, compressionBuffer);
+                    handler.read(this, compressionBuffer);
+                } catch (DataFormatException e) {
+                    e.printStackTrace();
+                }
+            }
+        } else {
+            final byte[] data = BufferUtils.getBytes(buffer, length);
+            handler.read(this, ByteBuffer.wrap(data));
+        }
     }
 
     public SocketChannel getTarget() {
         return target;
+    }
+
+    public Context getTargetContext() {
+        return targetContext;
     }
 
     public void consumeCache(ByteBuffer buffer) {
@@ -84,6 +131,27 @@ public class Context {
         }
         buffer.put(cacheBuffer);
         this.cacheBuffer = null;
+    }
+
+    public ConnectionState getConnectionState() {
+        return connectionState;
+    }
+
+    public void setConnectionState(ConnectionState connectionState) {
+        this.connectionState = connectionState;
+    }
+
+    public boolean isCompression() {
+        return compression;
+    }
+
+    public int getCompressionThreshold() {
+        return compressionThreshold;
+    }
+
+    public void setCompression(boolean compression, int threshold) {
+        this.compression = compression;
+        this.compressionThreshold = threshold;
     }
 
     private void write(SocketChannel channel, ByteBuffer buffer) throws IOException {
