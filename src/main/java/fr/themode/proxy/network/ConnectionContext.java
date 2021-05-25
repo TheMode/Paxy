@@ -59,11 +59,11 @@ public class ConnectionContext {
                 // Write to cache or socket if full
                 try {
                     final int end = readBuffer.position();
-                    readBuffer.reset();
+                    readBuffer.reset(); // Return to the beginning of the packet
 
                     // Block write
-                    final int size = end - readBuffer.position();
-                    var slice = readBuffer.slice().limit(size);
+                    final int prevLimit = readBuffer.limit();
+                    var slice = readBuffer.limit(end);
                     try {
                         writeBuffer.put(slice);
                     } catch (BufferOverflowException e) {
@@ -71,7 +71,9 @@ public class ConnectionContext {
                         write(channel, slice);
                     }
 
-                    readBuffer.position(end); // Continue...
+                    // Return to original state (before writing)
+                    readBuffer.position(end);
+                    readBuffer.limit(prevLimit);
                 } catch (IOException e) {
                     // Connection probably closed
                     readBuffer.reset();
