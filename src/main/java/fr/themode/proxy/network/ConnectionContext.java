@@ -1,8 +1,9 @@
-package fr.themode.proxy;
+package fr.themode.proxy.network;
 
-import fr.themode.proxy.utils.ProtocolUtils;
+import fr.themode.proxy.ConnectionState;
 import fr.themode.proxy.protocol.ProtocolHandler;
 import fr.themode.proxy.utils.CompressionUtils;
+import fr.themode.proxy.utils.ProtocolUtils;
 
 import java.io.IOException;
 import java.nio.BufferOverflowException;
@@ -11,7 +12,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.util.zip.DataFormatException;
 
-public class Context {
+public class ConnectionContext {
 
     private final SocketChannel target;
     private final ProtocolHandler handler;
@@ -22,14 +23,16 @@ public class Context {
 
     private ByteBuffer cacheBuffer;
 
-    protected Context targetContext;
+    protected ConnectionContext targetConnectionContext;
 
-    public Context(SocketChannel target, ProtocolHandler handler) {
+    public ConnectionContext(SocketChannel target, ProtocolHandler handler) {
         this.target = target;
         this.handler = handler;
     }
 
-    public void processPackets(SocketChannel channel, ByteBuffer readBuffer, ByteBuffer writeBuffer, ByteBuffer contentBuffer) {
+    public void processPackets(SocketChannel channel, WorkerContext workerContext) {
+        ByteBuffer readBuffer = workerContext.readBuffer;
+        ByteBuffer writeBuffer = workerContext.writeBuffer;
         // Read all packets
         while (readBuffer.remaining() > 0) {
             readBuffer.mark();
@@ -40,7 +43,7 @@ public class Context {
                 try {
                     // Retrieve payload buffer
                     ByteBuffer payload = readBuffer.slice().limit(packetLength);
-                    processPacket(payload, packetLength, contentBuffer);
+                    processPacket(payload, packetLength, workerContext);
                 } catch (IllegalArgumentException e) {
                     // Incomplete packet
                     throw new BufferUnderflowException();
@@ -92,7 +95,8 @@ public class Context {
         }
     }
 
-    private void processPacket(ByteBuffer buffer, int length, ByteBuffer contentBuffer) throws BufferUnderflowException {
+    private void processPacket(ByteBuffer buffer, int length, WorkerContext workerContext) throws BufferUnderflowException {
+        var contentBuffer = workerContext.contentBuffer;
         if (compression) {
             int position = buffer.position();
             final int dataLength = ProtocolUtils.readVarInt(buffer);
@@ -108,7 +112,7 @@ public class Context {
                 // Compressed
                 try {
                     var compressed = buffer.slice();
-                    CompressionUtils.decompress(compressed, dataLength, contentBuffer);
+                    CompressionUtils.decompress(workerContext.inflater, compressed, dataLength, contentBuffer);
                     handler.read(this, contentBuffer);
                 } catch (DataFormatException e) {
                     e.printStackTrace();
@@ -125,8 +129,8 @@ public class Context {
         return target;
     }
 
-    public Context getTargetContext() {
-        return targetContext;
+    public ConnectionContext getTargetContext() {
+        return targetConnectionContext;
     }
 
     public void consumeCache(ByteBuffer buffer) {

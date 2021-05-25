@@ -1,4 +1,4 @@
-package fr.themode.proxy;
+package fr.themode.proxy.network;
 
 import fr.themode.proxy.protocol.ClientHandler;
 import fr.themode.proxy.protocol.ServerHandler;
@@ -15,16 +15,19 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-public class ProxyThread {
+/**
+ * A worker with its own {@link Selector selector}.
+ * <p>
+ * Used to read and process packets.
+ */
+public class Worker {
 
-    private final Map<SocketChannel, Context> channelMap = new ConcurrentHashMap<>();
+    private final Map<SocketChannel, ConnectionContext> channelMap = new ConcurrentHashMap<>();
     private final Selector selector = Selector.open();
 
-    private final ByteBuffer readBuffer = ByteBuffer.allocateDirect(Server.THREAD_READ_BUFFER);
-    private final ByteBuffer writeBuffer = ByteBuffer.allocateDirect(Server.THREAD_WRITE_BUFFER);
-    private final ByteBuffer contentBuffer = ByteBuffer.allocateDirect(Server.THREAD_CONTENT_BUFFER);
+    private final WorkerContext workerContext = new WorkerContext();
 
-    public ProxyThread() throws IOException {
+    public Worker() throws IOException {
         Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(() -> {
             try {
                 threadTick();
@@ -55,6 +58,7 @@ public class ProxyThread {
                 var context = channelMap.get(channel);
                 var target = context.getTarget();
                 try {
+                    ByteBuffer readBuffer = workerContext.readBuffer;
 
                     // Consume last incomplete packet
                     context.consumeCache(readBuffer);
@@ -74,7 +78,7 @@ public class ProxyThread {
 
                     // Process data
                     readBuffer.flip();
-                    context.processPackets(target, readBuffer, writeBuffer, contentBuffer);
+                    context.processPackets(target, workerContext);
                 } catch (IOException e) {
                     e.printStackTrace();
                     try {
@@ -87,9 +91,7 @@ public class ProxyThread {
                         ioException.printStackTrace();
                     }
                 } finally {
-                    readBuffer.clear();
-                    writeBuffer.clear();
-                    contentBuffer.clear();
+                    workerContext.clearBuffers();
                 }
             }
             iter.remove();
@@ -97,11 +99,11 @@ public class ProxyThread {
     }
 
     public void receiveConnection(SocketChannel clientChannel, SocketChannel serverChannel) throws IOException {
-        var clientContext = new Context(serverChannel, new ClientHandler());
-        var serverContext = new Context(clientChannel, new ServerHandler());
+        var clientContext = new ConnectionContext(serverChannel, new ClientHandler());
+        var serverContext = new ConnectionContext(clientChannel, new ServerHandler());
 
-        clientContext.targetContext = serverContext;
-        serverContext.targetContext = clientContext;
+        clientContext.targetConnectionContext = serverContext;
+        serverContext.targetConnectionContext = clientContext;
 
         this.channelMap.put(clientChannel, clientContext);
         this.channelMap.put(serverChannel, serverContext);

@@ -1,4 +1,4 @@
-package fr.themode.proxy;
+package fr.themode.proxy.network;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -11,9 +11,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-public class Server {
+/**
+ * Starts the proxy socket & workers.
+ */
+public final class Server {
 
-    public static final int THREAD_COUNT = Integer.getInteger("proxy.threads", Runtime.getRuntime().availableProcessors() * 2);
+    public static final int WORKER_COUNT = Integer.getInteger("proxy.workers", Runtime.getRuntime().availableProcessors() * 2);
     public static final int THREAD_READ_BUFFER = Integer.getInteger("proxy.thread-read-buffer", 262143);
     public static final int THREAD_WRITE_BUFFER = Integer.getInteger("proxy.thread-write-buffer", 262143);
     public static final int THREAD_CONTENT_BUFFER = 2097151; // Max size of a 3 bytes var-int
@@ -22,13 +25,13 @@ public class Server {
     private static final InetSocketAddress PROXY_ADDRESS = new InetSocketAddress("0.0.0.0", 25566);
     private static final InetSocketAddress TARGET_ADDRESS = new InetSocketAddress("0.0.0.0", 25565);
 
-    private final List<ProxyThread> threads = new ArrayList<>(THREAD_COUNT);
+    private final List<Worker> workers = new ArrayList<>(WORKER_COUNT);
     private int index;
 
     public Server() throws IOException {
-        // Create all threads
-        for (int i = 0; i < THREAD_COUNT; i++) {
-            this.threads.add(new ProxyThread());
+        // Create all workers
+        for (int i = 0; i < WORKER_COUNT; i++) {
+            this.workers.add(new Worker());
         }
         // Start server
         startEndPoint();
@@ -50,8 +53,7 @@ public class Server {
                 SelectionKey key = iter.next();
                 if (key.isAcceptable()) {
                     // Register socket and forward to thread
-                    index = ++index % THREAD_COUNT;
-                    ProxyThread thread = threads.get(index);
+                    Worker thread = findWorker();
 
                     var clientChannel = serverSocket.accept();
                     var serverChannel = SocketChannel.open(TARGET_ADDRESS);
@@ -61,5 +63,10 @@ public class Server {
                 iter.remove();
             }
         }
+    }
+
+    private Worker findWorker() {
+        this.index = ++index % WORKER_COUNT;
+        return workers.get(index);
     }
 }
