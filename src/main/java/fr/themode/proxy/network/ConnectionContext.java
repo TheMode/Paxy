@@ -96,25 +96,24 @@ public class ConnectionContext {
     }
 
     private void processPacket(ByteBuffer buffer, int length, WorkerContext workerContext) throws BufferUnderflowException {
-        var contentBuffer = workerContext.contentBuffer;
+        var contentBuffer = workerContext.contentBuffer.clear();
         if (compression) {
             int position = buffer.position();
             final int dataLength = ProtocolUtils.readVarInt(buffer);
             if (dataLength == 0) {
                 // Uncompressed
                 final int size = buffer.position() - position;
-                contentBuffer.clear().limit(length - size).put(buffer).flip();
+                contentBuffer.limit(length - size).put(buffer).flip();
             } else {
                 // Compressed
                 try {
-                    var compressed = buffer.slice();
-                    CompressionUtils.decompress(workerContext.inflater, compressed, dataLength, contentBuffer);
+                    CompressionUtils.decompress(workerContext.inflater, buffer, dataLength, contentBuffer.limit(dataLength));
                 } catch (DataFormatException e) {
                     e.printStackTrace();
                 }
             }
         } else {
-            contentBuffer.clear().limit(length).put(buffer).flip();
+            contentBuffer.limit(length).put(buffer).flip();
         }
         this.handler.read(this, contentBuffer);
     }
