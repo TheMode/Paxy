@@ -35,7 +35,7 @@ public class ConnectionContext {
         ByteBuffer writeBuffer = workerContext.writeBuffer;
         // Read all packets
         while (readBuffer.remaining() > 0) {
-            readBuffer.mark();
+            readBuffer.mark(); // Mark the beginning of the packet
             try {
                 // Read packet
                 final int packetLength = ProtocolUtils.readVarInt(readBuffer);
@@ -88,12 +88,10 @@ public class ConnectionContext {
         }
 
         // Write remaining
-        if (writeBuffer.position() > 0) {
-            try {
-                write(channel, writeBuffer.flip());
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+        try {
+            write(channel, writeBuffer.flip());
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
