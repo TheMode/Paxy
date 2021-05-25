@@ -105,7 +105,7 @@ public class ConnectionContext {
             if (dataLength == 0) {
                 // Uncompressed
                 final int size = buffer.position() - position;
-                contentBuffer.limit(length - size).put(buffer).flip();
+                contentBuffer.limit(length - size).put(buffer);
             } else {
                 // Compressed
                 try {
@@ -115,9 +115,9 @@ public class ConnectionContext {
                 }
             }
         } else {
-            contentBuffer.limit(length).put(buffer).flip();
+            contentBuffer.limit(length).put(buffer);
         }
-        this.handler.read(this, contentBuffer);
+        this.handler.read(this, contentBuffer.flip());
     }
 
     public SocketChannel getTarget() {
