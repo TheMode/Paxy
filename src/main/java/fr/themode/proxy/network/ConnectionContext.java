@@ -43,7 +43,7 @@ public class ConnectionContext {
                 try {
                     // Retrieve payload buffer
                     ByteBuffer payload = readBuffer.slice().limit(packetLength);
-                    processPacket(payload, packetLength, workerContext);
+                    processPacket(payload, workerContext);
                 } catch (IllegalArgumentException e) {
                     // Incomplete packet
                     throw new BufferUnderflowException();
@@ -97,25 +97,23 @@ public class ConnectionContext {
         }
     }
 
-    private void processPacket(ByteBuffer buffer, int length, WorkerContext workerContext) throws BufferUnderflowException {
+    private void processPacket(ByteBuffer buffer, WorkerContext workerContext) throws BufferUnderflowException {
         var contentBuffer = workerContext.contentBuffer.clear();
         if (compression) {
-            int position = buffer.position();
             final int dataLength = ProtocolUtils.readVarInt(buffer);
             if (dataLength == 0) {
                 // Uncompressed
-                final int size = buffer.position() - position;
-                contentBuffer.limit(length - size).put(buffer);
+                contentBuffer.put(buffer);
             } else {
                 // Compressed
                 try {
-                    CompressionUtils.decompress(workerContext.inflater, buffer, contentBuffer.limit(dataLength));
+                    CompressionUtils.decompress(workerContext.inflater, buffer, contentBuffer);
                 } catch (DataFormatException e) {
                     e.printStackTrace();
                 }
             }
         } else {
-            contentBuffer.limit(length).put(buffer);
+            contentBuffer.put(buffer);
         }
         this.handler.read(this, contentBuffer.flip());
     }
