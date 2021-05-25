@@ -100,29 +100,23 @@ public class ConnectionContext {
         if (compression) {
             int position = buffer.position();
             final int dataLength = ProtocolUtils.readVarInt(buffer);
-
             if (dataLength == 0) {
                 // Uncompressed
-                int size = buffer.position() - position;
-
-                var content = contentBuffer.slice().limit(length - size);
-                content.put(buffer).flip();
-                handler.read(this, content);
+                final int size = buffer.position() - position;
+                contentBuffer.clear().limit(length - size).put(buffer).flip();
             } else {
                 // Compressed
                 try {
                     var compressed = buffer.slice();
                     CompressionUtils.decompress(workerContext.inflater, compressed, dataLength, contentBuffer);
-                    handler.read(this, contentBuffer);
                 } catch (DataFormatException e) {
                     e.printStackTrace();
                 }
             }
         } else {
-            var content = contentBuffer.slice().limit(length);
-            content.put(buffer).flip();
-            handler.read(this, content);
+            contentBuffer.clear().limit(length).put(buffer).flip();
         }
+        this.handler.read(this, contentBuffer);
     }
 
     public SocketChannel getTarget() {
