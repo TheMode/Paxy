@@ -2,7 +2,6 @@ package fr.themode.proxy.network;
 
 import fr.themode.proxy.protocol.ClientHandler;
 import fr.themode.proxy.protocol.ServerHandler;
-import fr.themode.proxy.utils.TaskUtils;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -27,7 +26,7 @@ public class Worker {
     private final WorkerContext workerContext = new WorkerContext();
 
     public Worker() throws IOException {
-        TaskUtils.startSelector(this::threadTick);
+        WorkerThread.start(this::threadTick);
     }
 
     private void threadTick() {
