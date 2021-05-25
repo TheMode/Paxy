@@ -109,7 +109,7 @@ public class ConnectionContext {
             } else {
                 // Compressed
                 try {
-                    CompressionUtils.decompress(workerContext.inflater, buffer, dataLength, contentBuffer.limit(dataLength));
+                    CompressionUtils.decompress(workerContext.inflater, buffer, contentBuffer.limit(dataLength));
                 } catch (DataFormatException e) {
                     e.printStackTrace();
                 }
