@@ -113,7 +113,12 @@ public class ConnectionContext {
         } else {
             contentBuffer.put(buffer);
         }
-        this.handler.read(this, contentBuffer.flip());
+        try {
+            this.handler.read(this, contentBuffer.flip());
+        } catch (Exception e) {
+            // Error while reading the packet
+            e.printStackTrace();
+        }
     }
 
     public SocketChannel getTarget() {
