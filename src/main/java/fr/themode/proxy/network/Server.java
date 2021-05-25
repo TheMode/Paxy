@@ -7,7 +7,6 @@ import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -46,22 +45,26 @@ public final class Server {
 
         System.out.println("Server starting, wait for connections");
         while (true) {
-            selector.select();
-            Set<SelectionKey> selectedKeys = selector.selectedKeys();
-            Iterator<SelectionKey> iter = selectedKeys.iterator();
-            while (iter.hasNext()) {
-                SelectionKey key = iter.next();
-                if (key.isAcceptable()) {
-                    // Register socket and forward to thread
-                    Worker thread = findWorker();
+            // Busy wait for connections
+            serverTick(selector, serverSocket);
+        }
+    }
 
-                    var clientChannel = serverSocket.accept();
-                    var serverChannel = SocketChannel.open(TARGET_ADDRESS);
-                    thread.receiveConnection(clientChannel, serverChannel);
-                    System.out.println("New connection");
-                }
-                iter.remove();
+    private void serverTick(Selector selector, ServerSocketChannel socketChannel) throws IOException {
+        selector.select();
+        Set<SelectionKey> selectedKeys = selector.selectedKeys();
+        var iter = selectedKeys.iterator();
+        while (iter.hasNext()) {
+            SelectionKey key = iter.next();
+            if (key.isAcceptable()) {
+                // Register socket and forward to thread
+                Worker thread = findWorker();
+                var clientChannel = socketChannel.accept();
+                var serverChannel = SocketChannel.open(TARGET_ADDRESS);
+                thread.receiveConnection(clientChannel, serverChannel);
+                System.out.println("New connection");
             }
+            iter.remove();
         }
     }
 

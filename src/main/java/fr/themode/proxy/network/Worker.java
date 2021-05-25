@@ -2,6 +2,7 @@ package fr.themode.proxy.network;
 
 import fr.themode.proxy.protocol.ClientHandler;
 import fr.themode.proxy.protocol.ServerHandler;
+import fr.themode.proxy.utils.TaskUtils;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -12,8 +13,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 /**
  * A worker with its own {@link Selector selector}.
@@ -28,13 +27,7 @@ public class Worker {
     private final WorkerContext workerContext = new WorkerContext();
 
     public Worker() throws IOException {
-        Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(() -> {
-            try {
-                threadTick();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }, 0, Server.SELECTOR_TIMER, TimeUnit.MILLISECONDS);
+        TaskUtils.startSelector(this::threadTick);
     }
 
     private void threadTick() {
@@ -116,7 +109,6 @@ public class Worker {
         serverChannel.configureBlocking(false);
         serverChannel.register(selector, interest);
 
-        selector.wakeup();
+        this.selector.wakeup();
     }
-
 }
