@@ -1,8 +1,8 @@
-package fr.themode.proxy.buffer;
+package fr.themode.proxy.utils;
 
 import java.nio.ByteBuffer;
 
-public class BufferUtils {
+public class ProtocolUtils {
 
     public static int readVarInt(ByteBuffer byteBuffer, int maxRead) {
         int i = 0;

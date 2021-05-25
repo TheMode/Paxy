@@ -1,6 +1,6 @@
 package fr.themode.proxy;
 
-import fr.themode.proxy.buffer.BufferUtils;
+import fr.themode.proxy.utils.ProtocolUtils;
 import fr.themode.proxy.protocol.ProtocolHandler;
 import fr.themode.proxy.utils.CompressionUtils;
 
@@ -35,7 +35,7 @@ public class Context {
             readBuffer.mark();
             try {
                 // Read packet
-                final int packetLength = BufferUtils.readVarInt(readBuffer);
+                final int packetLength = ProtocolUtils.readVarInt(readBuffer);
 
                 try {
                     // Retrieve payload buffer
@@ -95,7 +95,7 @@ public class Context {
     private void processPacket(ByteBuffer buffer, int length, ByteBuffer contentBuffer) throws BufferUnderflowException {
         if (compression) {
             int position = buffer.position();
-            final int dataLength = BufferUtils.readVarInt(buffer);
+            final int dataLength = ProtocolUtils.readVarInt(buffer);
 
             if (dataLength == 0) {
                 // Uncompressed
