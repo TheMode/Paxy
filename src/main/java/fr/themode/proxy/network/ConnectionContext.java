@@ -158,7 +158,7 @@ public class ConnectionContext {
     }
 
     private void write(SocketChannel channel, ByteBuffer buffer) throws IOException {
-        while (buffer.position() != buffer.limit()) {
+        while (buffer.remaining() > 0) {
             channel.write(buffer);
         }
     }
