@@ -1,8 +1,8 @@
 package fr.themode.proxy.network;
 
 import fr.themode.proxy.ConnectionState;
+import fr.themode.proxy.protocol.Protocol;
 import fr.themode.proxy.protocol.ProtocolHandler;
-import fr.themode.proxy.utils.CompressionUtils;
 import fr.themode.proxy.utils.ProtocolUtils;
 
 import java.io.IOException;
@@ -10,7 +10,6 @@ import java.nio.BufferOverflowException;
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
-import java.util.zip.DataFormatException;
 
 public class ConnectionContext {
 
@@ -25,6 +24,8 @@ public class ConnectionContext {
 
     protected ConnectionContext targetConnectionContext;
 
+    private final Protocol protocol = Protocol.VANILLA;
+
     public ConnectionContext(SocketChannel target, ProtocolHandler handler) {
         this.target = target;
         this.handler = handler;
@@ -32,7 +33,6 @@ public class ConnectionContext {
 
     public void processPackets(SocketChannel channel, WorkerContext workerContext) {
         ByteBuffer readBuffer = workerContext.readBuffer;
-        ByteBuffer writeBuffer = workerContext.writeBuffer;
         final int limit = readBuffer.limit();
         // Read all packets
         while (readBuffer.remaining() > 0) {
@@ -47,27 +47,47 @@ public class ConnectionContext {
                 }
 
                 readBuffer.limit(packetEnd);
-                processPacket(readBuffer, workerContext);
 
-                // Write to cache or socket if full
+                // Read protocol
+                var content = workerContext.contentBuffer.clear();
+                this.protocol.read(this, readBuffer, workerContext);
+
+                // Transform packet
+                boolean transformed = false;
+                var transformPayload = workerContext.transformPayload.clear();
                 try {
-                    readBuffer.reset(); // Return to the beginning of the packet
-
-                    // Block write
-                    try {
-                        writeBuffer.put(readBuffer);
-                    } catch (BufferOverflowException e) {
-                        // Buffer is full, write in 2 steps
-                        write(channel, writeBuffer.flip());
-                        write(channel, readBuffer);
-                    }
-
-                    // Return to original state (before writing)
-                    readBuffer.limit(limit).position(packetEnd);
-                } catch (IOException e) {
-                    // Connection probably closed
-                    break;
+                    transformed = this.handler.process(this, content.flip(),
+                            transformPayload);
+                } catch (Exception e) {
+                    // Error while reading the packet
+                    e.printStackTrace();
                 }
+
+                // Write to cache/socket
+                if (transformed) {
+                    var target = workerContext.transform.clear();
+                    this.protocol.write(this, transformPayload.flip(), workerContext);
+                    transformPayload.clear();
+                    if (!incrementalWrite(channel, target.flip(), workerContext)) {
+                        break;
+                    }
+                } else {
+                    // Packet hasn't been modified, write slice
+                    readBuffer.reset(); // Return to the beginning of the packet
+                    if (!incrementalWrite(channel, readBuffer, workerContext)) {
+                        break;
+                    }
+                }
+
+                // Check if the previous packet enabled compression
+                {
+                    if (!compression && compressionThreshold > 0) {
+                        this.compression = true;
+                    }
+                }
+
+                // Return to original state (before writing)
+                readBuffer.limit(limit).position(packetEnd);
             } catch (BufferUnderflowException e) {
                 readBuffer.reset();
                 this.cacheBuffer = ByteBuffer.allocateDirect(readBuffer.remaining());
@@ -78,34 +98,8 @@ public class ConnectionContext {
 
         // Write remaining
         try {
-            write(channel, writeBuffer.flip());
+            write(channel, workerContext.writeBuffer.flip());
         } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void processPacket(ByteBuffer buffer, WorkerContext workerContext) throws BufferUnderflowException {
-        var contentBuffer = workerContext.contentBuffer.clear();
-        if (compression) {
-            final int dataLength = ProtocolUtils.readVarInt(buffer);
-            if (dataLength == 0) {
-                // Uncompressed
-                contentBuffer.put(buffer);
-            } else {
-                // Compressed
-                try {
-                    CompressionUtils.decompress(workerContext.inflater, buffer, contentBuffer);
-                } catch (DataFormatException e) {
-                    e.printStackTrace();
-                }
-            }
-        } else {
-            contentBuffer.put(buffer);
-        }
-        try {
-            this.handler.read(this, contentBuffer.flip());
-        } catch (Exception e) {
-            // Error while reading the packet
             e.printStackTrace();
         }
     }
@@ -142,9 +136,25 @@ public class ConnectionContext {
         return compressionThreshold;
     }
 
-    public void setCompression(boolean compression, int threshold) {
-        this.compression = compression;
+    public void setCompression(int threshold) {
         this.compressionThreshold = threshold;
+    }
+
+    private boolean incrementalWrite(SocketChannel channel, ByteBuffer buffer, WorkerContext workerContext) {
+        try {
+            var writeBuffer = workerContext.writeBuffer;
+            try {
+                writeBuffer.put(buffer);
+            } catch (BufferOverflowException e) {
+                // Buffer is full, write in 2 steps
+                write(channel, writeBuffer.flip());
+                write(channel, buffer);
+            }
+            return true;
+        } catch (IOException e) {
+            // Connection probably closed
+            return false;
+        }
     }
 
     private void write(SocketChannel channel, ByteBuffer buffer) throws IOException {

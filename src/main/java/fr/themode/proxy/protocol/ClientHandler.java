@@ -7,8 +7,10 @@ import java.nio.ByteBuffer;
 
 public class ClientHandler extends ProtocolHandler {
     @Override
-    public void read(ConnectionContext connectionContext, ByteBuffer payload) {
+    public boolean process(ConnectionContext connectionContext, ByteBuffer payload, ByteBuffer transform) {
         final int packetId = ProtocolUtils.readVarInt(payload);
         //System.out.println("client " + Integer.toHexString(packetId) + " " + context.isCompression());
+
+        return false;
     }
 }

@@ -9,6 +9,7 @@ public class CompressionUtils {
 
     public static void compress(Deflater deflater, ByteBuffer input, ByteBuffer output) {
         deflater.setInput(input);
+        deflater.finish();
         deflater.deflate(output);
         deflater.reset();
     }

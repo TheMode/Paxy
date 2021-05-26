@@ -18,7 +18,7 @@ public final class Server {
     public static final int WORKER_COUNT = Integer.getInteger("proxy.workers", Runtime.getRuntime().availableProcessors() * 2);
     public static final int THREAD_READ_BUFFER = Integer.getInteger("proxy.thread-read-buffer", 262143);
     public static final int THREAD_WRITE_BUFFER = Integer.getInteger("proxy.thread-write-buffer", 262143);
-    public static final int THREAD_CONTENT_BUFFER = 2097151; // Max size of a 3 bytes var-int
+    public static final int MAX_PACKET_SIZE = 2097151; // 3 bytes var-int
 
     private static final InetSocketAddress PROXY_ADDRESS = new InetSocketAddress("0.0.0.0", 25566);
     private static final InetSocketAddress TARGET_ADDRESS = new InetSocketAddress("0.0.0.0", 25565);
