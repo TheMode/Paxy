@@ -66,7 +66,7 @@ public class ConnectionContext {
                 // Write to cache/socket
                 if (transformed) {
                     var target = workerContext.transform.clear();
-                    this.protocol.write(this, transformPayload.flip(), workerContext);
+                    this.protocol.write(this, transformPayload.flip(), target, workerContext);
                     transformPayload.clear();
                     if (!incrementalWrite(channel, target.flip(), workerContext)) {
                         break;

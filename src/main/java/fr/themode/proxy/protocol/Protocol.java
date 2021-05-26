@@ -35,35 +35,31 @@ public interface Protocol {
         }
 
         @Override
-        public void write(ConnectionContext context, ByteBuffer buffer, WorkerContext workerContext) {
-            final boolean compression = context.isCompression();
-
-            var payload = workerContext.transformPayload;
-            var target = workerContext.transform;
-            if (compression) {
+        public void write(ConnectionContext context, ByteBuffer payload, ByteBuffer out, WorkerContext workerContext) {
+            if (context.isCompression()) {
                 final int decompressedSize = payload.remaining();
 
-                final int lengthIndex = ProtocolUtils.writeEmptyVarIntHeader(target);
-                final int contentStart = target.position();
+                final int lengthIndex = ProtocolUtils.writeEmptyVarIntHeader(out);
+                final int contentStart = out.position();
 
                 final int threshold = context.getCompressionThreshold();
                 if (decompressedSize >= threshold) {
-                    ProtocolUtils.writeVarInt(target, decompressedSize);
-                    CompressionUtils.compress(workerContext.deflater, payload, target);
+                    ProtocolUtils.writeVarInt(out, decompressedSize);
+                    CompressionUtils.compress(workerContext.deflater, payload, out);
                 } else {
-                    ProtocolUtils.writeVarInt(target, 0);
-                    target.put(payload);
+                    ProtocolUtils.writeVarInt(out, 0);
+                    out.put(payload);
                 }
-                final int finalSize = target.position() - contentStart;
-                ProtocolUtils.writeVarIntHeader(target, lengthIndex, finalSize);
+                final int finalSize = out.position() - contentStart;
+                ProtocolUtils.writeVarIntHeader(out, lengthIndex, finalSize);
             } else {
-                ProtocolUtils.writeVarInt(target, payload.remaining());
-                target.put(payload);
+                ProtocolUtils.writeVarInt(out, payload.remaining());
+                out.put(payload);
             }
         }
     };
 
     void read(ConnectionContext context, ByteBuffer buffer, WorkerContext workerContext);
 
-    void write(ConnectionContext context, ByteBuffer buffer, WorkerContext workerContext);
+    void write(ConnectionContext context, ByteBuffer payload, ByteBuffer out, WorkerContext workerContext);
 }
