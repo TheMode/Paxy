@@ -56,7 +56,7 @@ public class Worker {
                     context.consumeCache(readBuffer);
 
                     // Read socket
-                    while (readBuffer.position() < readBuffer.limit()) {
+                    while (readBuffer.remaining() > 0) {
                         final int length = channel.read(readBuffer);
                         if (length == 0) {
                             // Nothing to read
@@ -83,7 +83,7 @@ public class Worker {
                         ioException.printStackTrace();
                     }
                 } finally {
-                    workerContext.clearBuffers();
+                    this.workerContext.clearBuffers();
                 }
             }
             iter.remove();

@@ -41,15 +41,15 @@ public class ConnectionContext {
                 // Read packet
                 final int packetLength = ProtocolUtils.readVarInt(readBuffer);
                 final int packetEnd = readBuffer.position() + packetLength;
-                try {
-                    // Retrieve payload buffer
-                    ByteBuffer payload = readBuffer.slice().limit(packetLength);
-                    processPacket(payload, workerContext);
-                    readBuffer.position(packetEnd); // Skip payload & verify integrity
-                } catch (IllegalArgumentException e) {
-                    // Incomplete packet
+
+                // Change limit to the end of the packet & verify integrity
+                if (packetEnd > readBuffer.limit()) {
+                    // Integrity fail
                     throw new BufferUnderflowException();
                 }
+
+                readBuffer.limit(packetEnd);
+                processPacket(readBuffer, workerContext);
 
                 // Write to cache or socket if full
                 try {
@@ -66,7 +66,7 @@ public class ConnectionContext {
                     }
 
                     // Return to original state (before writing)
-                    readBuffer.position(packetEnd).limit(limit);
+                    readBuffer.limit(limit).position(packetEnd);
                 } catch (IOException e) {
                     // Connection probably closed
                     break;
