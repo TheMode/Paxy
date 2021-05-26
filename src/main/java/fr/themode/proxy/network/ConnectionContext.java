@@ -33,6 +33,7 @@ public class ConnectionContext {
     public void processPackets(SocketChannel channel, WorkerContext workerContext) {
         ByteBuffer readBuffer = workerContext.readBuffer;
         ByteBuffer writeBuffer = workerContext.writeBuffer;
+        final int limit = readBuffer.limit();
         // Read all packets
         while (readBuffer.remaining() > 0) {
             readBuffer.mark(); // Mark the beginning of the packet
@@ -55,7 +56,6 @@ public class ConnectionContext {
                     readBuffer.reset(); // Return to the beginning of the packet
 
                     // Block write
-                    final int prevLimit = readBuffer.limit();
                     final var slice = readBuffer.limit(packetEnd);
                     try {
                         writeBuffer.put(slice);
@@ -66,7 +66,7 @@ public class ConnectionContext {
                     }
 
                     // Return to original state (before writing)
-                    readBuffer.position(packetEnd).limit(prevLimit);
+                    readBuffer.position(packetEnd).limit(limit);
                 } catch (IOException e) {
                     // Connection probably closed
                     break;
