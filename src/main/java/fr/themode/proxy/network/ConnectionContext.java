@@ -41,8 +41,6 @@ public class ConnectionContext {
                 // Read packet
                 final int packetLength = ProtocolUtils.readVarInt(readBuffer);
                 final int packetEnd = readBuffer.position() + packetLength;
-
-                // Change limit to the end of the packet & verify integrity
                 if (packetEnd > readBuffer.limit()) {
                     // Integrity fail
                     throw new BufferUnderflowException();
@@ -56,13 +54,12 @@ public class ConnectionContext {
                     readBuffer.reset(); // Return to the beginning of the packet
 
                     // Block write
-                    final var slice = readBuffer.limit(packetEnd);
                     try {
-                        writeBuffer.put(slice);
+                        writeBuffer.put(readBuffer);
                     } catch (BufferOverflowException e) {
                         // Buffer is full, write in 2 steps
                         write(channel, writeBuffer.flip());
-                        write(channel, slice);
+                        write(channel, readBuffer);
                     }
 
                     // Return to original state (before writing)
