@@ -39,18 +39,12 @@ public class ConnectionContext {
             try {
                 // Read packet
                 final int packetLength = ProtocolUtils.readVarInt(readBuffer);
-
+                final int packetEnd = readBuffer.position() + packetLength;
                 try {
                     // Retrieve payload buffer
                     ByteBuffer payload = readBuffer.slice().limit(packetLength);
                     processPacket(payload, workerContext);
-                } catch (IllegalArgumentException e) {
-                    // Incomplete packet
-                    throw new BufferUnderflowException();
-                }
-
-                try {
-                    readBuffer.position(readBuffer.position() + packetLength); // Skip payload
+                    readBuffer.position(packetEnd); // Skip payload & verify integrity
                 } catch (IllegalArgumentException e) {
                     // Incomplete packet
                     throw new BufferUnderflowException();
@@ -58,25 +52,23 @@ public class ConnectionContext {
 
                 // Write to cache or socket if full
                 try {
-                    final int end = readBuffer.position();
                     readBuffer.reset(); // Return to the beginning of the packet
 
                     // Block write
                     final int prevLimit = readBuffer.limit();
-                    var slice = readBuffer.limit(end);
+                    final var slice = readBuffer.limit(packetEnd);
                     try {
                         writeBuffer.put(slice);
                     } catch (BufferOverflowException e) {
+                        // Buffer is full, write in 2 steps
                         write(channel, writeBuffer.flip());
                         write(channel, slice);
                     }
 
                     // Return to original state (before writing)
-                    readBuffer.position(end);
-                    readBuffer.limit(prevLimit);
+                    readBuffer.position(packetEnd).limit(prevLimit);
                 } catch (IOException e) {
                     // Connection probably closed
-                    readBuffer.reset();
                     break;
                 }
             } catch (BufferUnderflowException e) {
