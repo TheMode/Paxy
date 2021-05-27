@@ -5,5 +5,5 @@ import fr.themode.proxy.network.ConnectionContext;
 import java.nio.ByteBuffer;
 
 public abstract class ProtocolHandler {
-    public abstract boolean process(ConnectionContext connectionContext, ByteBuffer payload, ByteBuffer transform);
+    public abstract void process(ConnectionContext connectionContext, int packetId, ByteBuffer payload);
 }

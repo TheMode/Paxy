@@ -7,8 +7,7 @@ import java.nio.ByteBuffer;
 
 public class ServerHandler extends ProtocolHandler {
     @Override
-    public boolean process(ConnectionContext connectionContext, ByteBuffer payload, ByteBuffer transform) {
-        final int packetId = ProtocolUtils.readVarInt(payload);
+    public void process(ConnectionContext connectionContext, int packetId, ByteBuffer payload) {
         //System.out.println("server " + Integer.toHexString(packetId) + " " + context.isCompression());
 
         if (packetId == 3) {
@@ -17,6 +16,5 @@ public class ServerHandler extends ProtocolHandler {
             connectionContext.setCompression(threshold);
             connectionContext.getTargetContext().setCompression(threshold);
         }
-        return false;
     }
 }

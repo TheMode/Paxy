@@ -3,6 +3,7 @@ package fr.themode.proxy.network;
 import fr.themode.proxy.ConnectionState;
 import fr.themode.proxy.protocol.Protocol;
 import fr.themode.proxy.protocol.ProtocolHandler;
+import fr.themode.proxy.transform.PacketTransformer;
 import fr.themode.proxy.utils.ProtocolUtils;
 
 import java.io.IOException;
@@ -25,6 +26,8 @@ public class ConnectionContext {
     protected ConnectionContext targetConnectionContext;
 
     private final Protocol protocol = Protocol.VANILLA;
+
+    private final TransformResult transformResult = new TransformResult();
 
     public ConnectionContext(SocketChannel target, ProtocolHandler handler) {
         this.target = target;
@@ -59,37 +62,36 @@ public class ConnectionContext {
                     content.flip();
                 }
 
-                // Transform packet
-                boolean transformed = false;
-                var transformPayload = workerContext.transformPayload.clear();
+                // Apply packet transformation
+                transform(this, content, workerContext.transformPayload.clear(), transformResult);
+                content = transformResult.result;
+
+                final int contentPositionCache = content.position();
+
+                // Write to cache/socket
+                ByteBuffer writeCache;
+                if (transformResult.transformed) {
+                    writeCache = workerContext.transform.clear();
+                    this.protocol.write(this, content.flip(), writeCache, workerContext);
+                    writeCache.flip();
+                } else {
+                    // Packet hasn't been modified, write slice
+                    writeCache = readBuffer.reset();// Return to the beginning of the packet
+                }
+                if (!incrementalWrite(channel, writeCache, workerContext)) {
+                    break;
+                }
+
+                content.position(contentPositionCache);
+
+                // Process packet
+                final int packetId = ProtocolUtils.readVarInt(content);
                 try {
-                    transformed = this.handler.process(this, content, transformPayload);
+                    this.handler.process(this, packetId, content);
                 } catch (Exception e) {
                     // Error while reading the packet
                     e.printStackTrace();
-                }
-
-                // Write to cache/socket
-                if (transformed) {
-                    var target = workerContext.transform.clear();
-                    this.protocol.write(this, transformPayload.flip(), target, workerContext);
-                    transformPayload.clear();
-                    if (!incrementalWrite(channel, target.flip(), workerContext)) {
-                        break;
-                    }
-                } else {
-                    // Packet hasn't been modified, write slice
-                    readBuffer.reset(); // Return to the beginning of the packet
-                    if (!incrementalWrite(channel, readBuffer, workerContext)) {
-                        break;
-                    }
-                }
-
-                // Check if the previous packet enabled compression
-                {
-                    if (!compression && compressionThreshold > 0) {
-                        this.compression = true;
-                    }
+                    break;
                 }
 
                 // Return to original state (before writing)
@@ -143,7 +145,20 @@ public class ConnectionContext {
     }
 
     public void setCompression(int threshold) {
+        this.compression = threshold > 0;
         this.compressionThreshold = threshold;
+    }
+
+    private void transform(ConnectionContext context, ByteBuffer in, ByteBuffer out, TransformResult transformResult) {
+        PacketTransformer transformer = null;
+        if (transformer == null) {
+            transformResult.result = in;
+            transformResult.transformed = false;
+            return;
+        }
+        transformer.transform(context, in, out);
+        transformResult.result = out;
+        transformResult.transformed = true;
     }
 
     private boolean incrementalWrite(SocketChannel channel, ByteBuffer buffer, WorkerContext workerContext) {
@@ -167,5 +182,10 @@ public class ConnectionContext {
         while (buffer.remaining() > 0) {
             channel.write(buffer);
         }
+    }
+
+    private static class TransformResult {
+        ByteBuffer result;
+        boolean transformed;
     }
 }
