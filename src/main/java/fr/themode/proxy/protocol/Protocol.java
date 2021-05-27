@@ -12,26 +12,24 @@ public interface Protocol {
 
     Protocol VANILLA = new Protocol() {
         @Override
-        public void read(ConnectionContext context, ByteBuffer buffer, WorkerContext workerContext) {
-            final var compression = context.isCompression();
-            var contentBuffer = workerContext.contentBuffer;
-            if (compression) {
-                final int dataLength = ProtocolUtils.readVarInt(buffer);
-                if (dataLength == 0) {
-                    // Uncompressed
-                    contentBuffer.put(buffer);
-                } else {
-                    // Compressed
-                    try {
-                        CompressionUtils.decompress(workerContext.inflater, buffer, contentBuffer);
-                    } catch (DataFormatException e) {
-                        e.printStackTrace();
-                    }
-                }
-            } else {
-                // Compression disabled
-                contentBuffer.put(buffer);
+        public boolean read(ConnectionContext context, ByteBuffer buffer, WorkerContext workerContext) {
+            if (!context.isCompression()) {
+                // Compression disabled, payload is following
+                return true;
             }
+            final int dataLength = ProtocolUtils.readVarInt(buffer);
+            if (dataLength == 0) {
+                // Data is too small to be compressed, payload is following
+                return true;
+            }
+
+            // Compressed
+            try {
+                CompressionUtils.decompress(workerContext.inflater, buffer, workerContext.contentBuffer);
+            } catch (DataFormatException e) {
+                e.printStackTrace();
+            }
+            return false;
         }
 
         @Override
@@ -57,7 +55,7 @@ public interface Protocol {
         }
     };
 
-    void read(ConnectionContext context, ByteBuffer buffer, WorkerContext workerContext);
+    boolean read(ConnectionContext context, ByteBuffer buffer, WorkerContext workerContext);
 
     void write(ConnectionContext context, ByteBuffer payload, ByteBuffer out, WorkerContext workerContext);
 }

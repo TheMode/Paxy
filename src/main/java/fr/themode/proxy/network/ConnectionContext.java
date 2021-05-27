@@ -50,14 +50,20 @@ public class ConnectionContext {
 
                 // Read protocol
                 var content = workerContext.contentBuffer.clear();
-                this.protocol.read(this, readBuffer, workerContext);
+                if (protocol.read(this, readBuffer, workerContext)) {
+                    // Payload is available in the read buffer without any copy/transformation
+                    content = readBuffer;
+                } else {
+                    // Make the content buffer readable
+                    // Data has been copied over (probably involving decompression)
+                    content.flip();
+                }
 
                 // Transform packet
                 boolean transformed = false;
                 var transformPayload = workerContext.transformPayload.clear();
                 try {
-                    transformed = this.handler.process(this, content.flip(),
-                            transformPayload);
+                    transformed = this.handler.process(this, content, transformPayload);
                 } catch (Exception e) {
                     // Error while reading the packet
                     e.printStackTrace();
