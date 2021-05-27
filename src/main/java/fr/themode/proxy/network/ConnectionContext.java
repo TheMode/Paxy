@@ -64,7 +64,7 @@ public class ConnectionContext {
 
                 // Apply packet transformation
                 transform(this, content, workerContext.transformPayload.clear(), transformResult);
-                content = transformResult.result;
+                content = transformResult.buffer;
 
                 final int contentPositionCache = content.position();
 
@@ -72,11 +72,11 @@ public class ConnectionContext {
                 ByteBuffer writeCache;
                 if (transformResult.transformed) {
                     writeCache = workerContext.transform.clear();
-                    this.protocol.write(this, content.flip(), writeCache, workerContext);
+                    this.protocol.write(this, content, writeCache, workerContext);
                     writeCache.flip();
                 } else {
                     // Packet hasn't been modified, write slice
-                    writeCache = readBuffer.reset();// Return to the beginning of the packet
+                    writeCache = readBuffer.reset(); // to the beginning of the packet
                 }
                 if (!incrementalWrite(channel, writeCache, workerContext)) {
                     break;
@@ -150,14 +150,14 @@ public class ConnectionContext {
     }
 
     private void transform(ConnectionContext context, ByteBuffer in, ByteBuffer out, TransformResult transformResult) {
-        PacketTransformer transformer = null;
+        PacketTransformer transformer = null; // TODO transform API
         if (transformer == null) {
-            transformResult.result = in;
+            transformResult.buffer = in;
             transformResult.transformed = false;
             return;
         }
         transformer.transform(context, in, out);
-        transformResult.result = out;
+        transformResult.buffer = out.flip();
         transformResult.transformed = true;
     }
 
@@ -185,7 +185,7 @@ public class ConnectionContext {
     }
 
     private static class TransformResult {
-        ByteBuffer result;
+        ByteBuffer buffer;
         boolean transformed;
     }
 }
