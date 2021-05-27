@@ -56,16 +56,9 @@ public class Worker {
                     context.consumeCache(readBuffer);
 
                     // Read socket
-                    while (readBuffer.remaining() > 0) {
-                        final int length = channel.read(readBuffer);
-                        if (length == 0) {
-                            // Nothing to read
-                            break;
-                        }
-                        if (length == -1) {
-                            // EOS
-                            throw new IOException("Disconnected");
-                        }
+                    if (channel.read(readBuffer) == -1) {
+                        // EOS
+                        throw new IOException("Disconnected");
                     }
 
                     // Process data
@@ -100,14 +93,17 @@ public class Worker {
         this.channelMap.put(clientChannel, clientContext);
         this.channelMap.put(serverChannel, serverContext);
 
-        final int interest = SelectionKey.OP_READ;
-
-        clientChannel.configureBlocking(false);
-        clientChannel.register(selector, interest);
-
-        serverChannel.configureBlocking(false);
-        serverChannel.register(selector, interest);
+        register(clientChannel);
+        register(serverChannel);
 
         this.selector.wakeup();
+    }
+
+    private void register(SocketChannel channel) throws IOException {
+        channel.configureBlocking(false);
+        channel.register(selector, SelectionKey.OP_READ);
+        var socket = channel.socket();
+        socket.setSendBufferSize(Server.SOCKET_SEND_BUFFER_SIZE);
+        socket.setReceiveBufferSize(Server.SOCKET_RECEIVE_BUFFER_SIZE);
     }
 }

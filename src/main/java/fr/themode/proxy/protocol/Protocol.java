@@ -38,12 +38,9 @@ public interface Protocol {
         public void write(ConnectionContext context, ByteBuffer payload, ByteBuffer out, WorkerContext workerContext) {
             if (context.isCompression()) {
                 final int decompressedSize = payload.remaining();
-
                 final int lengthIndex = ProtocolUtils.writeEmptyVarIntHeader(out);
                 final int contentStart = out.position();
-
-                final int threshold = context.getCompressionThreshold();
-                if (decompressedSize >= threshold) {
+                if (decompressedSize >= context.getCompressionThreshold()) {
                     ProtocolUtils.writeVarInt(out, decompressedSize);
                     CompressionUtils.compress(workerContext.deflater, payload, out);
                 } else {
@@ -53,6 +50,7 @@ public interface Protocol {
                 final int finalSize = out.position() - contentStart;
                 ProtocolUtils.writeVarIntHeader(out, lengthIndex, finalSize);
             } else {
+                // Length + payload
                 ProtocolUtils.writeVarInt(out, payload.remaining());
                 out.put(payload);
             }
