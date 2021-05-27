@@ -103,7 +103,7 @@ public class Worker {
         channel.configureBlocking(false);
         channel.register(selector, SelectionKey.OP_READ);
         var socket = channel.socket();
-        socket.setSendBufferSize(Server.SOCKET_SEND_BUFFER_SIZE);
-        socket.setReceiveBufferSize(Server.SOCKET_RECEIVE_BUFFER_SIZE);
+        socket.setSendBufferSize(Server.SOCKET_BUFFER_SIZE);
+        socket.setReceiveBufferSize(Server.SOCKET_BUFFER_SIZE);
     }
 }

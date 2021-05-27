@@ -16,11 +16,7 @@ import java.util.Set;
 public final class Server {
 
     public static final int WORKER_COUNT = Integer.getInteger("proxy.workers", Runtime.getRuntime().availableProcessors() * 2);
-    public static final int THREAD_READ_BUFFER = Integer.getInteger("proxy.thread-read-buffer", 262143);
-    public static final int THREAD_WRITE_BUFFER = Integer.getInteger("proxy.thread-write-buffer", 262143);
-
-    public static final int SOCKET_SEND_BUFFER_SIZE = Integer.getInteger("proxy.send-buffer-size", 262143);
-    public static final int SOCKET_RECEIVE_BUFFER_SIZE = Integer.getInteger("proxy.receive-buffer-size", 262143);
+    public static final int SOCKET_BUFFER_SIZE = Integer.getInteger("proxy.buffer-size", 262143);
 
     public static final int MAX_PACKET_SIZE = 2097151; // 3 bytes var-int
 

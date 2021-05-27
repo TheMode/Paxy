@@ -14,12 +14,12 @@ public final class WorkerContext {
     /**
      * Stores data read from the socket.
      */
-    public final ByteBuffer readBuffer = ByteBuffer.allocateDirect(Server.THREAD_READ_BUFFER);
+    public final ByteBuffer readBuffer = ByteBuffer.allocateDirect(Server.SOCKET_BUFFER_SIZE);
 
     /**
      * Stores data to write to the socket.
      */
-    public final ByteBuffer writeBuffer = ByteBuffer.allocateDirect(Server.THREAD_WRITE_BUFFER);
+    public final ByteBuffer writeBuffer = ByteBuffer.allocateDirect(Server.SOCKET_BUFFER_SIZE);
 
     /**
      * Stores a single packet payload to be read.
