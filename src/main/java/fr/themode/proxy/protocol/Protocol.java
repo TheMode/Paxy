@@ -10,9 +10,12 @@ import java.util.zip.DataFormatException;
 
 public interface Protocol {
 
+    /**
+     * Packet format as described at https://wiki.vg/Protocol#Packet_format
+     */
     Protocol VANILLA = new Protocol() {
         @Override
-        public boolean read(ConnectionContext context, ByteBuffer buffer, WorkerContext workerContext) {
+        public boolean read(ConnectionContext context, ByteBuffer buffer, ByteBuffer payloadOut, WorkerContext workerContext) {
             if (!context.isCompression()) {
                 // Compression disabled, payload is following
                 return true;
@@ -22,10 +25,9 @@ public interface Protocol {
                 // Data is too small to be compressed, payload is following
                 return true;
             }
-
-            // Compressed
+            // Decompress to content buffer
             try {
-                CompressionUtils.decompress(workerContext.inflater, buffer, workerContext.contentBuffer);
+                CompressionUtils.decompress(workerContext.inflater, buffer, payloadOut);
             } catch (DataFormatException e) {
                 e.printStackTrace();
             }
@@ -55,7 +57,7 @@ public interface Protocol {
         }
     };
 
-    boolean read(ConnectionContext context, ByteBuffer buffer, WorkerContext workerContext);
+    boolean read(ConnectionContext context, ByteBuffer buffer, ByteBuffer payloadOut, WorkerContext workerContext);
 
     void write(ConnectionContext context, ByteBuffer payload, ByteBuffer out, WorkerContext workerContext);
 }

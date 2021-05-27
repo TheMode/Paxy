@@ -50,7 +50,7 @@ public class ConnectionContext {
 
                 // Read protocol
                 var content = workerContext.contentBuffer.clear();
-                if (protocol.read(this, readBuffer, workerContext)) {
+                if (protocol.read(this, readBuffer, content, workerContext)) {
                     // Payload is available in the read buffer without any copy/transformation
                     content = readBuffer;
                 } else {
