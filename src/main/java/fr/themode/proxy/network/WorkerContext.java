@@ -24,7 +24,7 @@ public final class WorkerContext {
     /**
      * Stores a single packet payload to be read.
      * <p>
-     * Should be used by {@link Protocol#read(ConnectionContext, ByteBuffer, WorkerContext)}.
+     * Should be used by {@link Protocol#read(ConnectionContext, ByteBuffer, ByteBuffer, WorkerContext)}.
      */
     public final ByteBuffer contentBuffer = ByteBuffer.allocateDirect(Server.MAX_PACKET_SIZE);
 
