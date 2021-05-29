@@ -60,9 +60,13 @@ public class ProtocolUtils {
         final int indexCache = buffer.position();
         buffer.position(startIndex);
         final int w = (value & 0x7F | 0x80) << 16 | ((value >>> 7) & 0x7F | 0x80) << 8 | (value >>> 14);
-        buffer.put((byte) ((w >> 16) & 0xFF));
-        buffer.put((byte) ((w >> 8) & 0xFF));
-        buffer.put((byte) (w & 0xFF));
+        writeMedium(buffer, w);
         buffer.position(indexCache);
+    }
+
+    public static void writeMedium(ByteBuffer buffer, int value) {
+        buffer.put((byte) ((value >> 16) & 0xFF));
+        buffer.put((byte) ((value >> 8) & 0xFF));
+        buffer.put((byte) (value & 0xFF));
     }
 }
