@@ -3,6 +3,7 @@ package fr.themode.proxy.network;
 import fr.themode.proxy.protocol.Protocol;
 
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.zip.Deflater;
 import java.util.zip.Inflater;
 
@@ -14,22 +15,22 @@ public final class WorkerContext {
     /**
      * Stores data read from the socket.
      */
-    public final ByteBuffer readBuffer = ByteBuffer.allocateDirect(Server.SOCKET_BUFFER_SIZE);
+    public final ByteBuffer readBuffer = allocate(Server.SOCKET_BUFFER_SIZE);
 
     /**
      * Stores data to write to the socket.
      */
-    public final ByteBuffer writeBuffer = ByteBuffer.allocateDirect(Server.SOCKET_BUFFER_SIZE);
+    public final ByteBuffer writeBuffer = allocate(Server.SOCKET_BUFFER_SIZE);
 
     /**
      * Stores a single packet payload to be read.
      * <p>
      * Should be used by {@link Protocol#read(ConnectionContext, ByteBuffer, ByteBuffer, WorkerContext)}.
      */
-    public final ByteBuffer contentBuffer = ByteBuffer.allocateDirect(Server.MAX_PACKET_SIZE);
+    public final ByteBuffer contentBuffer = allocate(Server.MAX_PACKET_SIZE);
 
-    public final ByteBuffer transformPayload = ByteBuffer.allocateDirect(Server.MAX_PACKET_SIZE);
-    public final ByteBuffer transform = ByteBuffer.allocateDirect(Server.MAX_PACKET_SIZE);
+    public final ByteBuffer transformPayload = allocate(Server.MAX_PACKET_SIZE);
+    public final ByteBuffer transform = allocate(Server.MAX_PACKET_SIZE);
 
     public final Deflater deflater = new Deflater();
     public final Inflater inflater = new Inflater();
@@ -40,5 +41,9 @@ public final class WorkerContext {
         this.contentBuffer.clear();
         this.transformPayload.clear();
         this.transform.clear();
+    }
+
+    private static ByteBuffer allocate(int size) {
+        return ByteBuffer.allocateDirect(size).order(ByteOrder.nativeOrder());
     }
 }
