@@ -128,11 +128,11 @@ public class ConnectionContext {
         this.cacheBuffer = null;
     }
 
-    public ConnectionState getConnectionState() {
+    public ConnectionState getState() {
         return connectionState;
     }
 
-    public void setConnectionState(ConnectionState connectionState) {
+    public void setState(ConnectionState connectionState) {
         this.connectionState = connectionState;
     }
 

@@ -1,6 +1,7 @@
 package fr.themode.proxy.utils;
 
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 
 public class ProtocolUtils {
 
@@ -34,6 +35,15 @@ public class ProtocolUtils {
             }
         }
         return result;
+    }
+
+    public static String readString(ByteBuffer src, int maxLength) {
+        final int length = readVarInt(src);
+        if (length > maxLength)
+            throw new IllegalArgumentException("String too long: " + length);
+        final byte[] data = new byte[length];
+        src.get(data);
+        return new String(data, StandardCharsets.UTF_8);
     }
 
     public static void writeVarInt(ByteBuffer buffer, int value) {
