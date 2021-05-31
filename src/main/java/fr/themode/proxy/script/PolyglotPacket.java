@@ -18,7 +18,7 @@ public class PolyglotPacket implements ProxyObject {
 
     @Override
     public Object getMember(String key) {
-        return fields.get(key).getter.apply(packet);
+        return fields.get(key).getter().apply(packet);
     }
 
     @Override
@@ -34,7 +34,7 @@ public class PolyglotPacket implements ProxyObject {
     @Override
     public void putMember(String key, Value value) {
         final var field = fields.get(key);
-        final var casted = value.as(field.type);
-        field.setter.accept(packet, casted);
+        final var casted = value.as(field.type());
+        field.setter().accept(packet, casted);
     }
 }

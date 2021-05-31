@@ -47,17 +47,8 @@ public abstract class Packet {
         }
     }
 
-    public static class Field {
-        public final String name;
-        public final Class<Object> type;
-        public final Function<Object, Object> getter;
-        public final BiConsumer<Object, Object> setter;
-
-        public Field(String name, Class<Object> type, Function<Object, Object> getter, BiConsumer<Object, Object> setter) {
-            this.name = name;
-            this.type = type;
-            this.getter = getter;
-            this.setter = setter;
-        }
+    public record Field(String name, Class<Object> type,
+                        Function<Object, Object> getter,
+                        BiConsumer<Object, Object> setter) {
     }
 }
