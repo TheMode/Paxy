@@ -15,12 +15,11 @@ public class ConnectionStateUtils {
             final String address = ProtocolUtils.readString(payload, 255);
             final short port = payload.getShort();
             final int stateId = ProtocolUtils.readVarInt(payload);
-            ConnectionState nextState = null;
-            if (stateId == 1) {
-                nextState = ConnectionState.STATUS;
-            } else if (stateId == 2) {
-                nextState = ConnectionState.LOGIN;
-            }
+            final ConnectionState nextState = switch (stateId) {
+                case 1 -> ConnectionState.STATUS;
+                case 2 -> ConnectionState.LOGIN;
+                default -> throw new IllegalStateException("Unexpected value: " + stateId);
+            };
             context.setState(nextState);
             context.getTargetContext().setState(nextState);
         } else if (state == ConnectionState.LOGIN && packetId == 0) {
