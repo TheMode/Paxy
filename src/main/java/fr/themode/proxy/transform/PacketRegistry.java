@@ -25,21 +25,17 @@ public class PacketRegistry {
     private final Map<Integer, Supplier<Packet>> outgoingSupplierMap = new HashMap<>();
 
     public String getPacketName(PacketBound bound, int id) {
-        if (bound == PacketBound.IN) {
-            return incomingById.get(id);
-        } else if (bound == PacketBound.OUT) {
-            return outgoingById.get(id);
-        }
-        return null;
+        return switch (bound) {
+            case IN -> incomingById.get(id);
+            case OUT -> outgoingById.get(id);
+        };
     }
 
     public Packet getPacket(PacketBound bound, int id) {
-        Supplier<Packet> supplier = null;
-        if (bound == PacketBound.IN) {
-            supplier = incomingSupplierMap.get(id);
-        } else if (bound == PacketBound.OUT) {
-            supplier = outgoingSupplierMap.get(id);
-        }
+        Supplier<Packet> supplier = switch (bound) {
+            case IN -> incomingSupplierMap.get(id);
+            case OUT -> outgoingSupplierMap.get(id);
+        };
         return supplier != null ? supplier.get() : null;
     }
 
