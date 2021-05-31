@@ -83,23 +83,10 @@ public class ConnectionContext {
                     }
                 }
 
-                final int contentPositionCache = content.position();
-
                 // Write to cache/socket
-                ByteBuffer writeCache;
-                if (transformed) {
-                    writeCache = workerContext.transform.clear();
-                    this.protocol.write(this, content, writeCache, workerContext);
-                    writeCache.flip();
-                } else {
-                    // Packet hasn't been modified, write slice
-                    writeCache = readBuffer.reset(); // to the beginning of the packet
-                }
-                if (!incrementalWrite(channel, writeCache, workerContext)) {
+                if (!writeContent(channel, readBuffer, content, transformed, workerContext)) {
                     break;
                 }
-
-                content.position(contentPositionCache);
 
                 // Process packet
                 final int packetId = ProtocolUtils.readVarInt(content);
@@ -168,6 +155,25 @@ public class ConnectionContext {
     public void setCompression(int threshold) {
         this.compression = threshold > 0;
         this.compressionThreshold = threshold;
+    }
+
+    private boolean writeContent(SocketChannel channel,
+                                 ByteBuffer readBuffer, ByteBuffer content,
+                                 boolean transformed, WorkerContext workerContext) {
+        final int contentPositionCache = content.position();
+        // Write to cache/socket
+        ByteBuffer writeCache;
+        if (transformed) {
+            writeCache = workerContext.transform.clear();
+            this.protocol.write(this, content, writeCache, workerContext);
+            writeCache.flip();
+        } else {
+            // Packet hasn't been modified, write slice
+            writeCache = readBuffer.reset(); // to the beginning of the packet
+        }
+        final boolean result = incrementalWrite(channel, writeCache, workerContext);
+        content.position(contentPositionCache);
+        return result;
     }
 
     private boolean incrementalWrite(SocketChannel channel, ByteBuffer buffer, WorkerContext workerContext) {
