@@ -112,7 +112,7 @@ public class ConnectionContext {
         try {
             write(channel, workerContext.writeBuffer.flip());
         } catch (IOException e) {
-            e.printStackTrace();
+            // Client disconnected
         }
     }
 
