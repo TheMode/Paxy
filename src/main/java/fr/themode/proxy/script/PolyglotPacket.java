@@ -8,15 +8,17 @@ import java.util.Map;
 
 public class PolyglotPacket implements ProxyObject {
 
+    private final Packet packet;
     private final Map<String, Packet.Field> fields;
 
     public PolyglotPacket(Packet packet) {
+        this.packet = packet;
         this.fields = packet.getFields();
     }
 
     @Override
     public Object getMember(String key) {
-        return fields.get(key).getter.get();
+        return fields.get(key).getter.apply(packet);
     }
 
     @Override
@@ -33,6 +35,6 @@ public class PolyglotPacket implements ProxyObject {
     public void putMember(String key, Value value) {
         final var field = fields.get(key);
         final var casted = value.as(field.type);
-        field.setter.accept(casted);
+        field.setter.accept(packet, casted);
     }
 }

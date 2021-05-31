@@ -3,7 +3,7 @@ package fr.themode.proxy.script;
 import fr.themode.proxy.buffer.MinecraftBuffer;
 import fr.themode.proxy.network.ConnectionContext;
 import fr.themode.proxy.protocol.packet.Packet;
-import fr.themode.proxy.protocol.packet.outgoing.play.OutgoingChatMessagePacket;
+import fr.themode.proxy.protocol.packet.outgoing.play.OutChatMessagePacket;
 import fr.themode.proxy.utils.ProtocolUtils;
 
 import java.io.File;
@@ -35,8 +35,7 @@ public class ScriptLocal {
         if (packetId != 0x0e)
             return false;
 
-        Packet packet = new OutgoingChatMessagePacket();
-        packet.registerFields();
+        Packet packet = new OutChatMessagePacket();
         packet.read(MinecraftBuffer.wrap(in));
         scripts.forEach(script -> script.getExecutor().run(context, bound, packetName, packet));
         if (packet.isModified()) {
