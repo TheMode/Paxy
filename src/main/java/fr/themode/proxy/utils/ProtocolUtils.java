@@ -46,6 +46,11 @@ public class ProtocolUtils {
         return new String(data, StandardCharsets.UTF_8);
     }
 
+    public static void writeString(ByteBuffer src, String string) {
+        writeVarInt(src, string.length());
+        src.put(string.getBytes(StandardCharsets.UTF_8));
+    }
+
     public static void writeVarInt(ByteBuffer buffer, int value) {
         do {
             byte temp = (byte) (value & 0b01111111);

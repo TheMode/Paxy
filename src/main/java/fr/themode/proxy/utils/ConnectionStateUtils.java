@@ -9,7 +9,7 @@ public class ConnectionStateUtils {
 
     public static void handleClientState(ConnectionContext context, int packetId, ByteBuffer payload) {
         final var state = context.getState();
-        if (state == ConnectionState.UNKNOWN && packetId == 0) {
+        if (state == ConnectionState.HANDSHAKE && packetId == 0) {
             // Change to Status/Login state
             final int protocol = ProtocolUtils.readVarInt(payload);
             final String address = ProtocolUtils.readString(payload, 255);

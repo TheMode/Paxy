@@ -1,6 +1,7 @@
 package fr.themode.proxy.network;
 
 import fr.themode.proxy.ConnectionState;
+import fr.themode.proxy.PacketBound;
 import fr.themode.proxy.protocol.Protocol;
 import fr.themode.proxy.protocol.ProtocolHandler;
 import fr.themode.proxy.transform.PacketTransformer;
@@ -16,7 +17,8 @@ public class ConnectionContext {
 
     private final SocketChannel target;
     private final ProtocolHandler handler;
-    private ConnectionState connectionState = ConnectionState.UNKNOWN;
+    private final PacketBound packetBound;
+    private ConnectionState connectionState = ConnectionState.HANDSHAKE;
 
     private boolean compression = false;
     private int compressionThreshold = 0;
@@ -26,12 +28,12 @@ public class ConnectionContext {
     protected ConnectionContext targetConnectionContext;
 
     private final Protocol protocol = Protocol.VANILLA;
+    private final PacketTransformer transformer = PacketTransformer.VANILLA;
 
-    private final TransformResult transformResult = new TransformResult();
-
-    public ConnectionContext(SocketChannel target, ProtocolHandler handler) {
+    public ConnectionContext(SocketChannel target, ProtocolHandler handler, PacketBound packetBound) {
         this.target = target;
         this.handler = handler;
+        this.packetBound = packetBound;
     }
 
     public void processPackets(SocketChannel channel, WorkerContext workerContext) {
@@ -62,15 +64,30 @@ public class ConnectionContext {
                     content.flip();
                 }
 
+                // TODO protocol conversion
+
                 // Apply packet transformation
-                transform(this, content, workerContext.transformPayload.clear(), transformResult);
-                content = transformResult.buffer;
+                final var transformBuffer = workerContext.transformPayload.clear();
+                boolean transformed = false;
+                {
+                    final int transformCache = content.position();
+                    try {
+                        transformed = transformer.transform(this,
+                                content, transformBuffer,
+                                workerContext.scriptLocal);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    } finally {
+                        content.position(transformCache);
+                        content = transformed ? transformBuffer.flip() : content;
+                    }
+                }
 
                 final int contentPositionCache = content.position();
 
                 // Write to cache/socket
                 ByteBuffer writeCache;
-                if (transformResult.transformed) {
+                if (transformed) {
                     writeCache = workerContext.transform.clear();
                     this.protocol.write(this, content, writeCache, workerContext);
                     writeCache.flip();
@@ -120,6 +137,10 @@ public class ConnectionContext {
         return targetConnectionContext;
     }
 
+    public PacketBound getPacketBound() {
+        return packetBound;
+    }
+
     public void consumeCache(ByteBuffer buffer) {
         if (cacheBuffer == null) {
             return;
@@ -147,18 +168,6 @@ public class ConnectionContext {
     public void setCompression(int threshold) {
         this.compression = threshold > 0;
         this.compressionThreshold = threshold;
-    }
-
-    private void transform(ConnectionContext context, ByteBuffer in, ByteBuffer out, TransformResult transformResult) {
-        PacketTransformer transformer = null; // TODO transform API
-        if (transformer == null) {
-            transformResult.buffer = in;
-            transformResult.transformed = false;
-            return;
-        }
-        transformer.transform(context, in, out);
-        transformResult.buffer = out.flip();
-        transformResult.transformed = true;
     }
 
     private boolean incrementalWrite(SocketChannel channel, ByteBuffer buffer, WorkerContext workerContext) {

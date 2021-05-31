@@ -1,6 +1,7 @@
 package fr.themode.proxy.network;
 
 import fr.themode.proxy.protocol.Protocol;
+import fr.themode.proxy.script.ScriptLocal;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -34,6 +35,8 @@ public final class WorkerContext {
 
     public final Deflater deflater = new Deflater();
     public final Inflater inflater = new Inflater();
+
+    public final ScriptLocal scriptLocal = ScriptLocal.load("scripts");
 
     public void clearBuffers() {
         this.readBuffer.clear();
