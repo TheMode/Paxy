@@ -20,9 +20,9 @@ public class PacketRegistry {
     private final Map<Integer, String> outgoingById = new HashMap<>();
 
     public String getPacketName(PacketBound bound, int id) {
-        if (bound == PacketBound.INBOUND) {
+        if (bound == PacketBound.IN) {
             return incomingById.get(id);
-        } else if (bound == PacketBound.OUTBOUND) {
+        } else if (bound == PacketBound.OUT) {
             return outgoingById.get(id);
         }
         return null;

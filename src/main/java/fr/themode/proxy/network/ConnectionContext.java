@@ -192,9 +192,4 @@ public class ConnectionContext {
             channel.write(buffer);
         }
     }
-
-    private static class TransformResult {
-        ByteBuffer buffer;
-        boolean transformed;
-    }
 }

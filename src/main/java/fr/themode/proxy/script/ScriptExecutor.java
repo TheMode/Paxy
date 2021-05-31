@@ -26,7 +26,7 @@ public class ScriptExecutor {
     }
 
     protected void run(ConnectionContext context, PacketBound bound, String name, Packet packet) {
-        List<PacketListener> listeners = bound == PacketBound.OUTBOUND ? outgoingListeners.get(name) : incomingListeners.get(name);
+        List<PacketListener> listeners = bound == PacketBound.OUT ? outgoingListeners.get(name) : incomingListeners.get(name);
         if (listeners == null || listeners.isEmpty()) {
             // Nothing to run
             return;

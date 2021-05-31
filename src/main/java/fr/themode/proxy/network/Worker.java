@@ -85,8 +85,8 @@ public class Worker {
     }
 
     public void receiveConnection(SocketChannel clientChannel, SocketChannel serverChannel) throws IOException {
-        var clientContext = new ConnectionContext(serverChannel, new ClientHandler(), PacketBound.INBOUND);
-        var serverContext = new ConnectionContext(clientChannel, new ServerHandler(), PacketBound.OUTBOUND);
+        var clientContext = new ConnectionContext(serverChannel, new ClientHandler(), PacketBound.IN);
+        var serverContext = new ConnectionContext(clientChannel, new ServerHandler(), PacketBound.OUT);
 
         clientContext.targetConnectionContext = serverContext;
         serverContext.targetConnectionContext = clientContext;
