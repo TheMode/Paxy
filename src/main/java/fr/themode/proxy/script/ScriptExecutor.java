@@ -1,6 +1,7 @@
 package fr.themode.proxy.script;
 
 import fr.themode.proxy.PacketBound;
+import fr.themode.proxy.buffer.MinecraftBuffer;
 import fr.themode.proxy.network.ConnectionContext;
 import fr.themode.proxy.protocol.packet.Packet;
 
@@ -25,13 +26,15 @@ public class ScriptExecutor {
                 .add(listener);
     }
 
-    protected void run(ConnectionContext context, PacketBound bound, String name, Packet packet) {
+    protected void run(ConnectionContext context, PacketBound bound, String name, Packet packet, MinecraftBuffer in) {
         List<PacketListener> listeners = bound == PacketBound.OUT ? outgoingListeners.get(name) : incomingListeners.get(name);
         if (listeners == null || listeners.isEmpty()) {
             // Nothing to run
             return;
         }
-        listeners.forEach(listener -> listener.accept(context, new PolyglotPacket(packet)));
+        packet.ensureInitialization(in);
+        PolyglotPacket polyglotPacket = new PolyglotPacket(packet);
+        listeners.forEach(listener -> listener.accept(context, polyglotPacket));
     }
 
     private interface PacketListener extends BiConsumer<ConnectionContext, PolyglotPacket> {

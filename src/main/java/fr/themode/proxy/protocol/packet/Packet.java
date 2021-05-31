@@ -9,11 +9,18 @@ import java.util.function.Function;
 
 public abstract class Packet {
 
-    protected boolean modified;
+    protected boolean initialized, modified;
 
     public abstract void read(MinecraftBuffer in);
 
     public abstract void write(MinecraftBuffer out);
+
+    public void ensureInitialization(MinecraftBuffer in) {
+        if (!initialized) {
+            read(in);
+            this.initialized = true;
+        }
+    }
 
     public abstract Map<String, Field> getFields();
 

@@ -35,8 +35,7 @@ public class ScriptLocal {
             // No provider available
             return false;
         }
-        packet.read(MinecraftBuffer.wrap(in));
-        scripts.forEach(script -> script.getExecutor().run(context, bound, packetName, packet));
+        scripts.forEach(script -> script.getExecutor().run(context, bound, packetName, packet, MinecraftBuffer.wrap(in)));
         if (packet.isModified()) {
             ProtocolUtils.writeVarInt(out, packetId);
             packet.write(MinecraftBuffer.wrap(out));
