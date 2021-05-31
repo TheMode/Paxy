@@ -1,7 +1,6 @@
 package fr.themode.proxy.network;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
@@ -19,8 +18,8 @@ public final class Server {
     public static final int SOCKET_BUFFER_SIZE = Integer.getInteger("proxy.buffer-size", 262143);
     public static final int MAX_PACKET_SIZE = 2097151; // 3 bytes var-int
 
-    private static final InetSocketAddress PROXY_ADDRESS = new InetSocketAddress("0.0.0.0", 25566);
-    private static final InetSocketAddress TARGET_ADDRESS = new InetSocketAddress("0.0.0.0", 25565);
+    private static final ProxyAddress PROXY_ADDRESS = ProxyAddress.inet("0.0.0.0", 25566);
+    private static final ProxyAddress TARGET_ADDRESS = ProxyAddress.inet("0.0.0.0", 25565);
 
     private final List<Worker> workers = new ArrayList<>(WORKER_COUNT);
     private int index;
@@ -37,7 +36,7 @@ public final class Server {
     private void startEndPoint() throws IOException {
         Selector selector = Selector.open();
         ServerSocketChannel serverSocket = ServerSocketChannel.open();
-        serverSocket.bind(PROXY_ADDRESS);
+        serverSocket.bind(PROXY_ADDRESS.socketAddress());
         serverSocket.configureBlocking(false);
         serverSocket.register(selector, SelectionKey.OP_ACCEPT);
 
@@ -58,7 +57,7 @@ public final class Server {
                 // Register socket and forward to thread
                 Worker thread = findWorker();
                 var clientChannel = socketChannel.accept();
-                var serverChannel = SocketChannel.open(TARGET_ADDRESS);
+                var serverChannel = SocketChannel.open(TARGET_ADDRESS.socketAddress());
                 thread.receiveConnection(clientChannel, serverChannel);
                 System.out.println("New connection");
             }
