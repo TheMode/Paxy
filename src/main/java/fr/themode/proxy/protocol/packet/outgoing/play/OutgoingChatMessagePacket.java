@@ -1,9 +1,8 @@
 package fr.themode.proxy.protocol.packet.outgoing.play;
 
+import fr.themode.proxy.buffer.MinecraftBuffer;
 import fr.themode.proxy.protocol.packet.Packet;
-import fr.themode.proxy.utils.ProtocolUtils;
 
-import java.nio.ByteBuffer;
 import java.util.UUID;
 
 public class OutgoingChatMessagePacket extends Packet {
@@ -20,19 +19,16 @@ public class OutgoingChatMessagePacket extends Packet {
     }
 
     @Override
-    public void read(ByteBuffer in) {
-        this.message = ProtocolUtils.readString(in, 262144);
-        this.position = in.get();
-        this.sender = new UUID(in.getLong(), in.getLong());
+    public void read(MinecraftBuffer in) {
+        this.message = in.readString(262144);
+        this.position = in.readByte();
+        this.sender = in.readUuid();
     }
 
     @Override
-    public void write(ByteBuffer out) {
-        ProtocolUtils.writeVarInt(out, 0x0E);
-        ProtocolUtils.writeString(out, message);
-        out.put(position);
-
-        out.putLong(sender.getMostSignificantBits());
-        out.putLong(sender.getLeastSignificantBits());
+    public void write(MinecraftBuffer out) {
+        out.writeString(message);
+        out.writeByte(position);
+        out.writeUuid(sender);
     }
 }

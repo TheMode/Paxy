@@ -1,6 +1,7 @@
 package fr.themode.proxy.protocol.packet;
 
-import java.nio.ByteBuffer;
+import fr.themode.proxy.buffer.MinecraftBuffer;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -14,9 +15,9 @@ public abstract class Packet {
 
     public abstract void registerFields();
 
-    public abstract void read(ByteBuffer in);
+    public abstract void read(MinecraftBuffer in);
 
-    public abstract void write(ByteBuffer out);
+    public abstract void write(MinecraftBuffer out);
 
     public <T> void registerField(String name, Class<T> type, Supplier<T> getter, Consumer<T> setter) {
         this.fields.put(name, new Field(name, (Class<Object>) type,

@@ -1,8 +1,10 @@
 package fr.themode.proxy.script;
 
+import fr.themode.proxy.buffer.MinecraftBuffer;
 import fr.themode.proxy.network.ConnectionContext;
 import fr.themode.proxy.protocol.packet.Packet;
 import fr.themode.proxy.protocol.packet.outgoing.play.OutgoingChatMessagePacket;
+import fr.themode.proxy.utils.ProtocolUtils;
 
 import java.io.File;
 import java.nio.ByteBuffer;
@@ -35,10 +37,11 @@ public class ScriptLocal {
 
         Packet packet = new OutgoingChatMessagePacket();
         packet.registerFields();
-        packet.read(in);
+        packet.read(MinecraftBuffer.wrap(in));
         scripts.forEach(script -> script.getExecutor().run(context, bound, packetName, packet));
         if (packet.isModified()) {
-            packet.write(out);
+            ProtocolUtils.writeVarInt(out, packetId);
+            packet.write(MinecraftBuffer.wrap(out));
             return true;
         }
         return false;
