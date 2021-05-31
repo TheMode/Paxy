@@ -14,9 +14,11 @@ import java.util.Set;
  */
 public final class Server {
 
-    public static final int WORKER_COUNT = Integer.getInteger("proxy.workers", Runtime.getRuntime().availableProcessors() * 2);
+    public static final int WORKER_COUNT = Integer.getInteger("proxy.workers",
+            Runtime.getRuntime().availableProcessors() * 2);
     public static final int SOCKET_BUFFER_SIZE = Integer.getInteger("proxy.buffer-size", 262143);
     public static final int MAX_PACKET_SIZE = 2097151; // 3 bytes var-int
+    public static final boolean NO_DELAY = true;
 
     private static final ProxyAddress PROXY_ADDRESS = ProxyAddress.inet("0.0.0.0", 25566);
     private static final ProxyAddress TARGET_ADDRESS = ProxyAddress.inet("0.0.0.0", 25565);

@@ -106,5 +106,6 @@ public class Worker {
         var socket = channel.socket();
         socket.setSendBufferSize(Server.SOCKET_BUFFER_SIZE);
         socket.setReceiveBufferSize(Server.SOCKET_BUFFER_SIZE);
+        socket.setTcpNoDelay(Server.NO_DELAY);
     }
 }
