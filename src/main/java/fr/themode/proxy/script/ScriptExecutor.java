@@ -37,6 +37,6 @@ public class ScriptExecutor {
         listeners.forEach(listener -> listener.accept(context, polyglotPacket));
     }
 
-    private interface PacketListener extends BiConsumer<ConnectionContext, PolyglotPacket> {
+    public interface PacketListener extends BiConsumer<ConnectionContext, PolyglotPacket> {
     }
 }
