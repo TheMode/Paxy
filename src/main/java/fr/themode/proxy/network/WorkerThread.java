@@ -1,6 +1,7 @@
 package fr.themode.proxy.network;
 
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 
 public class WorkerThread extends Thread {
 
@@ -10,11 +11,12 @@ public class WorkerThread extends Thread {
         super(null, runnable, "worker-" + COUNTER.getAndIncrement());
     }
 
-    protected static WorkerThread start(Runnable runnable) {
+    protected static WorkerThread start(Consumer<WorkerContext> runnable) {
         WorkerThread thread = new WorkerThread(() -> {
+            WorkerContext workerContext = new WorkerContext();
             while (true) {
                 try {
-                    runnable.run();
+                    runnable.accept(workerContext);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }

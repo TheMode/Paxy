@@ -24,13 +24,11 @@ public class Worker {
     private final Map<SocketChannel, ConnectionContext> channelMap = new ConcurrentHashMap<>();
     private final Selector selector = Selector.open();
 
-    private final WorkerContext workerContext = new WorkerContext();
-
     public Worker() throws IOException {
         WorkerThread.start(this::threadTick);
     }
 
-    private void threadTick() {
+    private void threadTick(WorkerContext workerContext) {
         try {
             selector.select();
         } catch (IOException e) {
@@ -77,7 +75,7 @@ public class Worker {
                         ioException.printStackTrace();
                     }
                 } finally {
-                    this.workerContext.clearBuffers();
+                    workerContext.clearBuffers();
                 }
             }
             iter.remove();
