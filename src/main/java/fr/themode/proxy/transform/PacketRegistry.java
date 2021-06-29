@@ -82,7 +82,7 @@ public class PacketRegistry {
 
     private static PacketRegistry play() {
         var registry = new PacketRegistry();
-        registry.registerOutgoing("chat-message", 0x0E, OutChatMessagePacket::new);
+        registry.registerOutgoing("chat-message", 0x0F, OutChatMessagePacket::new);
         return registry;
     }
 }
