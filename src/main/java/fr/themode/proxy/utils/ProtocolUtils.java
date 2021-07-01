@@ -47,8 +47,9 @@ public class ProtocolUtils {
     }
 
     public static void writeString(ByteBuffer src, String string) {
-        writeVarInt(src, string.length());
-        src.put(string.getBytes(StandardCharsets.UTF_8));
+        final byte[] bytes = string.getBytes(StandardCharsets.UTF_8);
+        writeVarInt(src, bytes.length);
+        src.put(bytes);
     }
 
     public static void writeVarInt(ByteBuffer buffer, int value) {
