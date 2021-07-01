@@ -43,6 +43,7 @@ public final class Server {
         serverSocket.bind(PROXY_ADDRESS.socketAddress());
         serverSocket.configureBlocking(false);
         serverSocket.register(selector, SelectionKey.OP_ACCEPT);
+        serverSocket.socket().setReceiveBufferSize(Server.SOCKET_BUFFER_SIZE);
 
         System.out.println("Server starting, wait for connections");
         while (true) {
