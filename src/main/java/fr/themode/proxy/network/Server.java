@@ -58,8 +58,14 @@ public final class Server {
             if (key.isAcceptable()) {
                 // Register socket and forward to thread
                 Worker thread = findWorker();
-                var clientChannel = socketChannel.accept();
-                var serverChannel = SocketChannel.open(TARGET_ADDRESS.socketAddress());
+                final var clientChannel = socketChannel.accept();
+                final SocketChannel serverChannel;
+                try {
+                    serverChannel = SocketChannel.open(TARGET_ADDRESS.socketAddress());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    continue;
+                }
                 thread.receiveConnection(clientChannel, serverChannel);
                 System.out.println("New connection");
             }
