@@ -65,8 +65,7 @@ public class ProtocolUtils {
 
     public static int writeEmptyVarIntHeader(ByteBuffer buffer) {
         final int index = buffer.position();
-        buffer.put((byte) 0);
-        buffer.put((byte) 0);
+        buffer.putShort((short) 0);
         buffer.put((byte) 0);
         return index;
     }
@@ -74,14 +73,9 @@ public class ProtocolUtils {
     public static void writeVarIntHeader(ByteBuffer buffer, int startIndex, int value) {
         final int indexCache = buffer.position();
         buffer.position(startIndex);
-        final int w = (value & 0x7F | 0x80) << 16 | ((value >>> 7) & 0x7F | 0x80) << 8 | (value >>> 14);
-        writeMedium(buffer, w);
+        buffer.put((byte) (value & 0x7F | 0x80));
+        buffer.put((byte) ((value >>> 7) & 0x7F | 0x80));
+        buffer.put((byte) (value >>> 14));
         buffer.position(indexCache);
-    }
-
-    public static void writeMedium(ByteBuffer buffer, int value) {
-        buffer.put((byte) ((value >> 16) & 0xFF));
-        buffer.put((byte) ((value >> 8) & 0xFF));
-        buffer.put((byte) (value & 0xFF));
     }
 }
