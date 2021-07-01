@@ -46,7 +46,6 @@ public class Worker {
                 continue;
             }
             var context = channelMap.get(channel);
-            var target = context.getTarget();
             try {
                 ByteBuffer readBuffer = workerContext.readBuffer;
                 // Consume last incomplete packet
@@ -59,14 +58,15 @@ public class Worker {
                 }
                 // Process data
                 readBuffer.flip();
-                context.processPackets(target, workerContext);
+                context.processPackets(workerContext);
             } catch (IOException e) {
                 e.printStackTrace();
                 try {
                     // Client close
                     channel.close();
-                    target.close();
                     channelMap.remove(channel);
+                    var target = context.getTarget();
+                    target.close();
                     channelMap.remove(target);
                 } catch (IOException ioException) {
                     ioException.printStackTrace();

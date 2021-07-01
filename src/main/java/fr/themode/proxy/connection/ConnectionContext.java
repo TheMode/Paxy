@@ -1,7 +1,7 @@
 package fr.themode.proxy.connection;
 
-import fr.themode.proxy.State;
 import fr.themode.proxy.PacketBound;
+import fr.themode.proxy.State;
 import fr.themode.proxy.protocol.ProtocolFormat;
 import fr.themode.proxy.protocol.ProtocolHandler;
 import fr.themode.proxy.protocol.packet.PacketTransformer;
@@ -36,7 +36,7 @@ public class ConnectionContext {
         this.packetBound = packetBound;
     }
 
-    public void processPackets(SocketChannel channel, WorkerContext workerContext) {
+    public void processPackets(WorkerContext workerContext) {
         ByteBuffer readBuffer = workerContext.readBuffer;
         final int limit = readBuffer.limit();
         // Read all packets
@@ -84,7 +84,7 @@ public class ConnectionContext {
                 }
 
                 // Write to cache/socket
-                if (!writeContent(channel, readBuffer, content, transformed, workerContext)) {
+                if (!writeContent(readBuffer, content, transformed, workerContext)) {
                     break;
                 }
 
@@ -110,7 +110,7 @@ public class ConnectionContext {
 
         // Write remaining
         try {
-            write(channel, workerContext.writeBuffer.flip());
+            write(workerContext.writeBuffer.flip());
         } catch (IOException e) {
             // Client disconnected
         }
@@ -161,8 +161,7 @@ public class ConnectionContext {
         this.targetConnectionContext = targetConnectionContext;
     }
 
-    private boolean writeContent(SocketChannel channel,
-                                 ByteBuffer readBuffer, ByteBuffer content,
+    private boolean writeContent(ByteBuffer readBuffer, ByteBuffer content,
                                  boolean transformed, WorkerContext workerContext) {
         final int contentPositionCache = content.position();
         // Write to cache/socket
@@ -175,20 +174,20 @@ public class ConnectionContext {
             // Packet hasn't been modified, write slice
             writeCache = readBuffer.reset(); // to the beginning of the packet
         }
-        final boolean result = incrementalWrite(channel, writeCache, workerContext);
+        final boolean result = incrementalWrite(writeCache, workerContext);
         content.position(contentPositionCache);
         return result;
     }
 
-    private boolean incrementalWrite(SocketChannel channel, ByteBuffer buffer, WorkerContext workerContext) {
+    private boolean incrementalWrite(ByteBuffer buffer, WorkerContext workerContext) {
         try {
             var writeBuffer = workerContext.writeBuffer;
             try {
                 writeBuffer.put(buffer);
             } catch (BufferOverflowException e) {
                 // Buffer is full, write in 2 steps
-                write(channel, writeBuffer.flip());
-                write(channel, buffer);
+                write(writeBuffer.flip());
+                write(buffer);
             }
             return true;
         } catch (IOException e) {
@@ -197,9 +196,9 @@ public class ConnectionContext {
         }
     }
 
-    private void write(SocketChannel channel, ByteBuffer buffer) throws IOException {
+    private void write(ByteBuffer buffer) throws IOException {
         while (buffer.remaining() > 0) {
-            channel.write(buffer);
+            target.write(buffer);
         }
     }
 }
