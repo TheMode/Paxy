@@ -1,4 +1,7 @@
-package fr.themode.proxy.network;
+package fr.themode.proxy;
+
+import fr.themode.proxy.network.ProxyAddress;
+import fr.themode.proxy.worker.Worker;
 
 import java.io.IOException;
 import java.nio.channels.SelectionKey;

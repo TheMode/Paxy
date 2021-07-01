@@ -6,6 +6,7 @@ import fr.themode.proxy.protocol.Protocol;
 import fr.themode.proxy.protocol.ProtocolHandler;
 import fr.themode.proxy.transform.PacketTransformer;
 import fr.themode.proxy.utils.ProtocolUtils;
+import fr.themode.proxy.worker.WorkerContext;
 
 import java.io.IOException;
 import java.nio.BufferOverflowException;
@@ -155,6 +156,10 @@ public class ConnectionContext {
     public void setCompression(int threshold) {
         this.compression = threshold > 0;
         this.compressionThreshold = threshold;
+    }
+
+    public void setTargetConnectionContext(ConnectionContext targetConnectionContext) {
+        this.targetConnectionContext = targetConnectionContext;
     }
 
     private boolean writeContent(SocketChannel channel,

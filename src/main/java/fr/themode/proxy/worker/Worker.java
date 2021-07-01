@@ -1,6 +1,8 @@
-package fr.themode.proxy.network;
+package fr.themode.proxy.worker;
 
 import fr.themode.proxy.PacketBound;
+import fr.themode.proxy.Server;
+import fr.themode.proxy.network.ConnectionContext;
 import fr.themode.proxy.protocol.ClientHandler;
 import fr.themode.proxy.protocol.ServerHandler;
 
@@ -86,8 +88,8 @@ public class Worker {
         var clientContext = new ConnectionContext(serverChannel, new ClientHandler(), PacketBound.IN);
         var serverContext = new ConnectionContext(clientChannel, new ServerHandler(), PacketBound.OUT);
 
-        clientContext.targetConnectionContext = serverContext;
-        serverContext.targetConnectionContext = clientContext;
+        clientContext.setTargetConnectionContext(serverContext);
+        serverContext.setTargetConnectionContext(clientContext);
 
         this.channelMap.put(clientChannel, clientContext);
         this.channelMap.put(serverChannel, serverContext);

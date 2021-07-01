@@ -1,4 +1,4 @@
-package fr.themode.proxy.network;
+package fr.themode.proxy.worker;
 
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;

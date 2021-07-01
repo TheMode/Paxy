@@ -1,5 +1,7 @@
-package fr.themode.proxy.network;
+package fr.themode.proxy.worker;
 
+import fr.themode.proxy.Server;
+import fr.themode.proxy.network.ConnectionContext;
 import fr.themode.proxy.protocol.Protocol;
 import fr.themode.proxy.script.ScriptLocal;
 

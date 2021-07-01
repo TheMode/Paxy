@@ -1,7 +1,7 @@
 package fr.themode.proxy.protocol;
 
 import fr.themode.proxy.network.ConnectionContext;
-import fr.themode.proxy.network.WorkerContext;
+import fr.themode.proxy.worker.WorkerContext;
 import fr.themode.proxy.utils.CompressionUtils;
 import fr.themode.proxy.utils.ProtocolUtils;
 

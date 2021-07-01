@@ -7,7 +7,6 @@ import fr.themode.proxy.utils.ProtocolUtils;
 import java.nio.ByteBuffer;
 
 public interface PacketTransformer {
-
     PacketTransformer VANILLA = (context, in, out, scriptLocal) -> {
         final int packetId = ProtocolUtils.readVarInt(in);
         return scriptLocal.run(context, packetId, in, out);
