@@ -24,18 +24,13 @@ public class ScriptLocal {
 
     public boolean run(ConnectionContext context, int packetId, ByteBuffer in, ByteBuffer out) {
         final var bound = context.getPacketBound();
-        final var registry = context.getState().getRegistry();
-        final String packetName = registry.getPacketName(bound, packetId);
-        if (packetName == null) {
-            // Unknown packet, see registry
-            return false;
-        }
+        final var registry = context.getState().registry();
         Packet packet = registry.getPacket(bound, packetId);
         if (packet == null) {
             // No provider available
             return false;
         }
-        scripts.forEach(script -> script.getExecutor().run(context, bound, packetName, packet, MinecraftBuffer.wrap(in)));
+        scripts.forEach(script -> script.getExecutor().run(context, bound, packetId, packet, MinecraftBuffer.wrap(in)));
         if (packet.isModified()) {
             ProtocolUtils.writeVarInt(out, packetId);
             packet.write(MinecraftBuffer.wrap(out));

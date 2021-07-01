@@ -1,10 +1,10 @@
 package fr.themode.proxy.connection;
 
-import fr.themode.proxy.ConnectionState;
+import fr.themode.proxy.State;
 import fr.themode.proxy.PacketBound;
 import fr.themode.proxy.protocol.ProtocolFormat;
 import fr.themode.proxy.protocol.ProtocolHandler;
-import fr.themode.proxy.transform.PacketTransformer;
+import fr.themode.proxy.protocol.packet.PacketTransformer;
 import fr.themode.proxy.utils.ProtocolUtils;
 import fr.themode.proxy.worker.WorkerContext;
 
@@ -23,7 +23,7 @@ public class ConnectionContext {
     private final ProtocolHandler handler;
     private final PacketBound packetBound;
 
-    private ConnectionState connectionState = ConnectionState.HANDSHAKE;
+    private State state = State.HANDSHAKE;
     private boolean compression = false;
     private int compressionThreshold = 0;
 
@@ -51,7 +51,7 @@ public class ConnectionContext {
                     throw new BufferUnderflowException();
                 }
 
-                readBuffer.limit(packetEnd);
+                readBuffer.limit(packetEnd); // Ensure that the reader doesn't exceed packet bound
 
                 // Read protocol
                 var content = workerContext.contentBuffer.clear();
@@ -136,12 +136,12 @@ public class ConnectionContext {
         this.cacheBuffer = null;
     }
 
-    public ConnectionState getState() {
-        return connectionState;
+    public State getState() {
+        return state;
     }
 
-    public void setState(ConnectionState connectionState) {
-        this.connectionState = connectionState;
+    public void setState(State state) {
+        this.state = state;
     }
 
     public boolean isCompression() {

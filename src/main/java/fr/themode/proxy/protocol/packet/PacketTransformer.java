@@ -1,4 +1,4 @@
-package fr.themode.proxy.transform;
+package fr.themode.proxy.protocol.packet;
 
 import fr.themode.proxy.connection.ConnectionContext;
 import fr.themode.proxy.script.ScriptLocal;

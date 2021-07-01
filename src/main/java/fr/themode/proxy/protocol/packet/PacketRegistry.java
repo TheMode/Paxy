@@ -1,7 +1,6 @@
-package fr.themode.proxy.transform;
+package fr.themode.proxy.protocol.packet;
 
 import fr.themode.proxy.PacketBound;
-import fr.themode.proxy.protocol.packet.Packet;
 import fr.themode.proxy.protocol.packet.outgoing.play.OutChatMessagePacket;
 
 import java.util.HashMap;
@@ -28,6 +27,13 @@ public class PacketRegistry {
         return switch (bound) {
             case IN -> incomingById.get(id);
             case OUT -> outgoingById.get(id);
+        };
+    }
+
+    public int getPacketId(PacketBound bound, String name) {
+        return switch (bound) {
+            case IN -> incomingByName.get(name);
+            case OUT -> outgoingByName.get(name);
         };
     }
 

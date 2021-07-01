@@ -1,7 +1,8 @@
 package fr.themode.proxy.script;
 
-import fr.themode.proxy.PacketBound;
 import fr.themode.proxy.MinecraftBuffer;
+import fr.themode.proxy.PacketBound;
+import fr.themode.proxy.State;
 import fr.themode.proxy.connection.ConnectionContext;
 import fr.themode.proxy.protocol.packet.Packet;
 import org.graalvm.polyglot.Value;
@@ -15,23 +16,27 @@ import java.util.function.BiConsumer;
 
 public class ScriptExecutor {
 
-    private final Map<String, List<PacketListener>> outgoingListeners = new HashMap<>();
-    private final Map<String, List<PacketListener>> incomingListeners = new HashMap<>();
+    private final Map<Integer, List<PacketListener>> outgoingListeners = new HashMap<>();
+    private final Map<Integer, List<PacketListener>> incomingListeners = new HashMap<>();
 
-    public void registerOutgoing(String packetName, PacketListener listener) {
-        this.outgoingListeners.computeIfAbsent(packetName, s -> new ArrayList<>())
+    public void registerOutgoing(String stateString, String packetName, PacketListener listener) {
+        final State state = State.from(stateString);
+        final int id = state.registry().getPacketId(PacketBound.OUT, packetName);
+        this.outgoingListeners.computeIfAbsent(id, s -> new ArrayList<>())
                 .add(listener);
     }
 
-    public void registerIncoming(String packetName, PacketListener listener) {
-        this.incomingListeners.computeIfAbsent(packetName, s -> new ArrayList<>())
+    public void registerIncoming(String stateString, String packetName, PacketListener listener) {
+        final State state = State.from(stateString);
+        final int id = state.registry().getPacketId(PacketBound.IN, packetName);
+        this.incomingListeners.computeIfAbsent(id, s -> new ArrayList<>())
                 .add(listener);
     }
 
-    protected void run(ConnectionContext context, PacketBound bound, String name, Packet packet, MinecraftBuffer in) {
+    protected void run(ConnectionContext context, PacketBound bound, int id, Packet packet, MinecraftBuffer in) {
         final var listeners = switch (bound) {
-            case IN -> incomingListeners.get(name);
-            case OUT -> outgoingListeners.get(name);
+            case IN -> incomingListeners.get(id);
+            case OUT -> outgoingListeners.get(id);
         };
         if (listeners == null || listeners.isEmpty()) {
             // Nothing to run
