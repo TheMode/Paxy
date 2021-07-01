@@ -10,7 +10,6 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -34,53 +33,49 @@ public class Worker {
             selector.select();
         } catch (IOException e) {
             e.printStackTrace();
+            return;
         }
         Set<SelectionKey> selectedKeys = selector.selectedKeys();
-        Iterator<SelectionKey> iter = selectedKeys.iterator();
-        while (iter.hasNext()) {
-            SelectionKey key = iter.next();
-
+        for (SelectionKey key : selectedKeys) {
             SocketChannel channel = (SocketChannel) key.channel();
             if (!channel.isOpen()) {
-                iter.remove();
                 continue;
             }
-
-            if (key.isReadable()) {
-                var context = channelMap.get(channel);
-                var target = context.getTarget();
-                try {
-                    ByteBuffer readBuffer = workerContext.readBuffer;
-
-                    // Consume last incomplete packet
-                    context.consumeCache(readBuffer);
-
-                    // Read socket
-                    if (channel.read(readBuffer) == -1) {
-                        // EOS
-                        throw new IOException("Disconnected");
-                    }
-
-                    // Process data
-                    readBuffer.flip();
-                    context.processPackets(target, workerContext);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    try {
-                        // Client close
-                        channel.close();
-                        target.close();
-                        channelMap.remove(channel);
-                        channelMap.remove(target);
-                    } catch (IOException ioException) {
-                        ioException.printStackTrace();
-                    }
-                } finally {
-                    workerContext.clearBuffers();
-                }
+            if (!key.isReadable()) {
+                // We only care about read
+                continue;
             }
-            iter.remove();
+            var context = channelMap.get(channel);
+            var target = context.getTarget();
+            try {
+                ByteBuffer readBuffer = workerContext.readBuffer;
+                // Consume last incomplete packet
+                context.consumeCache(readBuffer);
+
+                // Read socket
+                if (channel.read(readBuffer) == -1) {
+                    // EOS
+                    throw new IOException("Disconnected");
+                }
+                // Process data
+                readBuffer.flip();
+                context.processPackets(target, workerContext);
+            } catch (IOException e) {
+                e.printStackTrace();
+                try {
+                    // Client close
+                    channel.close();
+                    target.close();
+                    channelMap.remove(channel);
+                    channelMap.remove(target);
+                } catch (IOException ioException) {
+                    ioException.printStackTrace();
+                }
+            } finally {
+                workerContext.clearBuffers();
+            }
         }
+        selectedKeys.clear();
     }
 
     public void receiveConnection(SocketChannel clientChannel, SocketChannel serverChannel) throws IOException {
