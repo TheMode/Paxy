@@ -1,6 +1,6 @@
 package fr.themode.proxy.transform;
 
-import fr.themode.proxy.network.ConnectionContext;
+import fr.themode.proxy.connection.ConnectionContext;
 import fr.themode.proxy.script.ScriptLocal;
 import fr.themode.proxy.utils.ProtocolUtils;
 

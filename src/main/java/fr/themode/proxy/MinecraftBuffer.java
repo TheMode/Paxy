@@ -1,4 +1,4 @@
-package fr.themode.proxy.buffer;
+package fr.themode.proxy;
 
 import fr.themode.proxy.utils.ProtocolUtils;
 

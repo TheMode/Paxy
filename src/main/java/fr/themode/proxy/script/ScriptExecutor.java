@@ -1,8 +1,8 @@
 package fr.themode.proxy.script;
 
 import fr.themode.proxy.PacketBound;
-import fr.themode.proxy.buffer.MinecraftBuffer;
-import fr.themode.proxy.network.ConnectionContext;
+import fr.themode.proxy.MinecraftBuffer;
+import fr.themode.proxy.connection.ConnectionContext;
 import fr.themode.proxy.protocol.packet.Packet;
 import org.graalvm.polyglot.Value;
 import org.graalvm.polyglot.proxy.ProxyObject;

@@ -2,7 +2,7 @@ package fr.themode.proxy.worker;
 
 import fr.themode.proxy.PacketBound;
 import fr.themode.proxy.Server;
-import fr.themode.proxy.network.ConnectionContext;
+import fr.themode.proxy.connection.ConnectionContext;
 import fr.themode.proxy.protocol.ClientHandler;
 import fr.themode.proxy.protocol.ServerHandler;
 
@@ -96,7 +96,6 @@ public class Worker {
 
         register(clientChannel);
         register(serverChannel);
-
         this.selector.wakeup();
     }
 

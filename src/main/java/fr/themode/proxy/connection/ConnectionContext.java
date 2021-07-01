@@ -1,4 +1,4 @@
-package fr.themode.proxy.network;
+package fr.themode.proxy.connection;
 
 import fr.themode.proxy.ConnectionState;
 import fr.themode.proxy.PacketBound;
@@ -16,20 +16,19 @@ import java.nio.channels.SocketChannel;
 
 public class ConnectionContext {
 
+    private final Protocol protocol = Protocol.VANILLA;
+    private final PacketTransformer transformer = PacketTransformer.VANILLA;
+
     private final SocketChannel target;
     private final ProtocolHandler handler;
     private final PacketBound packetBound;
-    private ConnectionState connectionState = ConnectionState.HANDSHAKE;
 
+    private ConnectionState connectionState = ConnectionState.HANDSHAKE;
     private boolean compression = false;
     private int compressionThreshold = 0;
 
     private ByteBuffer cacheBuffer;
-
-    protected ConnectionContext targetConnectionContext;
-
-    private final Protocol protocol = Protocol.VANILLA;
-    private final PacketTransformer transformer = PacketTransformer.VANILLA;
+    private ConnectionContext targetConnectionContext;
 
     public ConnectionContext(SocketChannel target, ProtocolHandler handler, PacketBound packetBound) {
         this.target = target;

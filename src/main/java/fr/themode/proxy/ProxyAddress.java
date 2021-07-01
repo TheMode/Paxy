@@ -1,4 +1,4 @@
-package fr.themode.proxy.network;
+package fr.themode.proxy;
 
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;

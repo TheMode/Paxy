@@ -1,6 +1,6 @@
 package fr.themode.proxy.protocol.packet;
 
-import fr.themode.proxy.buffer.MinecraftBuffer;
+import fr.themode.proxy.MinecraftBuffer;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -15,6 +15,8 @@ public abstract class Packet {
 
     public abstract void write(MinecraftBuffer out);
 
+    public abstract Map<String, Field> getFields();
+
     public void ensureInitialization(MinecraftBuffer in) {
         if (!initialized) {
             read(in);
@@ -22,13 +24,11 @@ public abstract class Packet {
         }
     }
 
-    public abstract Map<String, Field> getFields();
-
     public boolean isModified() {
         return modified;
     }
 
-    public static class FieldMap {
+    public static final class FieldMap {
         private final Map<String, Field> fields = new HashMap<>();
 
         public <P extends Packet, T> void registerField(Class<P> packetType,
