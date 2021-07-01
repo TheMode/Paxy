@@ -2,7 +2,7 @@ package fr.themode.proxy.connection;
 
 import fr.themode.proxy.ConnectionState;
 import fr.themode.proxy.PacketBound;
-import fr.themode.proxy.protocol.Protocol;
+import fr.themode.proxy.protocol.ProtocolFormat;
 import fr.themode.proxy.protocol.ProtocolHandler;
 import fr.themode.proxy.transform.PacketTransformer;
 import fr.themode.proxy.utils.ProtocolUtils;
@@ -16,7 +16,7 @@ import java.nio.channels.SocketChannel;
 
 public class ConnectionContext {
 
-    private final Protocol protocol = Protocol.VANILLA;
+    private final ProtocolFormat protocolFormat = ProtocolFormat.VANILLA;
     private final PacketTransformer transformer = PacketTransformer.VANILLA;
 
     private final SocketChannel target;
@@ -55,7 +55,7 @@ public class ConnectionContext {
 
                 // Read protocol
                 var content = workerContext.contentBuffer.clear();
-                if (protocol.read(this, readBuffer, content, workerContext)) {
+                if (protocolFormat.read(this, readBuffer, content, workerContext)) {
                     // Payload is available in the read buffer without any copy/transformation
                     content = readBuffer;
                 } else {
@@ -169,7 +169,7 @@ public class ConnectionContext {
         ByteBuffer writeCache;
         if (transformed) {
             writeCache = workerContext.transform.clear();
-            this.protocol.write(this, content, writeCache, workerContext);
+            this.protocolFormat.write(this, content, writeCache, workerContext);
             writeCache.flip();
         } else {
             // Packet hasn't been modified, write slice

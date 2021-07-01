@@ -2,7 +2,7 @@ package fr.themode.proxy.worker;
 
 import fr.themode.proxy.Server;
 import fr.themode.proxy.connection.ConnectionContext;
-import fr.themode.proxy.protocol.Protocol;
+import fr.themode.proxy.protocol.ProtocolFormat;
 import fr.themode.proxy.script.ScriptLocal;
 
 import java.nio.ByteBuffer;
@@ -28,7 +28,7 @@ public final class WorkerContext {
     /**
      * Stores a single packet payload to be read.
      * <p>
-     * Should be used by {@link Protocol#read(ConnectionContext, ByteBuffer, ByteBuffer, WorkerContext)}.
+     * Should be used by {@link ProtocolFormat#read(ConnectionContext, ByteBuffer, ByteBuffer, WorkerContext)}.
      */
     public final ByteBuffer contentBuffer = allocate(Server.MAX_PACKET_SIZE);
 

@@ -1,19 +1,22 @@
 package fr.themode.proxy.protocol;
 
 import fr.themode.proxy.connection.ConnectionContext;
-import fr.themode.proxy.worker.WorkerContext;
 import fr.themode.proxy.utils.CompressionUtils;
 import fr.themode.proxy.utils.ProtocolUtils;
+import fr.themode.proxy.worker.WorkerContext;
 
 import java.nio.ByteBuffer;
 import java.util.zip.DataFormatException;
 
-public interface Protocol {
+/**
+ * Parses protocol data being forwarded to the transformer.
+ */
+public interface ProtocolFormat {
 
     /**
      * Packet format as described at https://wiki.vg/Protocol#Packet_format
      */
-    Protocol VANILLA = new Protocol() {
+    ProtocolFormat VANILLA = new ProtocolFormat() {
         @Override
         public boolean read(ConnectionContext context, ByteBuffer buffer, ByteBuffer payloadOut, WorkerContext workerContext) {
             if (!context.isCompression()) {
