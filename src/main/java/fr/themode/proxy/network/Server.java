@@ -52,25 +52,23 @@ public final class Server {
     private void serverTick(Selector selector, ServerSocketChannel socketChannel) throws IOException {
         selector.select();
         Set<SelectionKey> selectedKeys = selector.selectedKeys();
-        var iter = selectedKeys.iterator();
-        while (iter.hasNext()) {
-            SelectionKey key = iter.next();
+        for (SelectionKey key : selectedKeys) {
             if (key.isAcceptable()) {
                 // Register socket and forward to thread
                 Worker thread = findWorker();
-                final var clientChannel = socketChannel.accept();
-                final SocketChannel serverChannel;
+                final SocketChannel client = socketChannel.accept();
+                final SocketChannel server;
                 try {
-                    serverChannel = SocketChannel.open(TARGET_ADDRESS.socketAddress());
+                    server = SocketChannel.open(TARGET_ADDRESS.socketAddress());
                 } catch (Exception e) {
                     e.printStackTrace();
                     continue;
                 }
-                thread.receiveConnection(clientChannel, serverChannel);
+                thread.receiveConnection(client, server);
                 System.out.println("New connection");
             }
-            iter.remove();
         }
+        selectedKeys.clear();
     }
 
     private Worker findWorker() {
