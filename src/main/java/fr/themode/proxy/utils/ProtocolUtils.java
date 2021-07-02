@@ -52,16 +52,23 @@ public class ProtocolUtils {
         src.put(bytes);
     }
 
-    public static void writeVarInt(ByteBuffer buffer, int value) {
-        do {
-            byte temp = (byte) (value & 0b01111111);
-            // Note: >>> means that the sign bit is shifted with the rest of the number rather than being left alone
-            value >>>= 7;
-            if (value != 0) {
-                temp |= 0b10000000;
-            }
-            buffer.put(temp);
-        } while (value != 0);
+    public static void writeVarInt(ByteBuffer buf, int value) {
+        if ((value & (0xFFFFFFFF << 7)) == 0) {
+            buf.put((byte) value);
+        } else if ((value & (0xFFFFFFFF << 14)) == 0) {
+            buf.putShort((short) ((value & 0x7F | 0x80) << 8 | (value >>> 7)));
+        } else if ((value & (0xFFFFFFFF << 21)) == 0) {
+            buf.put((byte) (value & 0x7F | 0x80));
+            buf.put((byte) ((value >>> 7) & 0x7F | 0x80));
+            buf.put((byte) (value >>> 14));
+        } else if ((value & (0xFFFFFFFF << 28)) == 0) {
+            buf.putInt((value & 0x7F | 0x80) << 24 | (((value >>> 7) & 0x7F | 0x80) << 16)
+                    | ((value >>> 14) & 0x7F | 0x80) << 8 | (value >>> 21));
+        } else {
+            buf.putInt((value & 0x7F | 0x80) << 24 | ((value >>> 7) & 0x7F | 0x80) << 16
+                    | ((value >>> 14) & 0x7F | 0x80) << 8 | ((value >>> 21) & 0x7F | 0x80));
+            buf.put((byte) (value >>> 28));
+        }
     }
 
     public static int writeEmptyVarIntHeader(ByteBuffer buffer) {
