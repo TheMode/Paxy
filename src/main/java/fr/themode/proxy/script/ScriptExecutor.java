@@ -5,31 +5,31 @@ import fr.themode.proxy.PacketBound;
 import fr.themode.proxy.State;
 import fr.themode.proxy.connection.ConnectionContext;
 import fr.themode.proxy.protocol.packet.Packet;
+import org.eclipse.collections.impl.map.mutable.primitive.IntObjectHashMap;
 import org.graalvm.polyglot.Value;
 import org.graalvm.polyglot.proxy.ProxyObject;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
 
 public class ScriptExecutor {
 
-    private final Map<Integer, List<PacketListener>> outgoingListeners = new HashMap<>();
-    private final Map<Integer, List<PacketListener>> incomingListeners = new HashMap<>();
+    private final IntObjectHashMap<List<PacketListener>> outgoingListeners = new IntObjectHashMap<>();
+    private final IntObjectHashMap<List<PacketListener>> incomingListeners = new IntObjectHashMap<>();
 
     public void registerOutgoing(String stateString, String packetName, PacketListener listener) {
         final State state = State.from(stateString);
         final int id = state.registry().getPacketId(PacketBound.OUT, packetName);
-        this.outgoingListeners.computeIfAbsent(id, s -> new ArrayList<>())
+        this.outgoingListeners.getIfAbsentPut(id, ArrayList::new)
                 .add(listener);
     }
 
     public void registerIncoming(String stateString, String packetName, PacketListener listener) {
         final State state = State.from(stateString);
         final int id = state.registry().getPacketId(PacketBound.IN, packetName);
-        this.incomingListeners.computeIfAbsent(id, s -> new ArrayList<>())
+        this.incomingListeners.getIfAbsentPut(id, ArrayList::new)
                 .add(listener);
     }
 

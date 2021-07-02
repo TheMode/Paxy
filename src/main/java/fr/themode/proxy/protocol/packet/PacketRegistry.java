@@ -2,9 +2,9 @@ package fr.themode.proxy.protocol.packet;
 
 import fr.themode.proxy.PacketBound;
 import fr.themode.proxy.protocol.packet.outgoing.play.OutChatMessagePacket;
+import org.eclipse.collections.impl.map.mutable.primitive.IntObjectHashMap;
+import org.eclipse.collections.impl.map.mutable.primitive.ObjectIntHashMap;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.function.Supplier;
 
 public class PacketRegistry {
@@ -14,14 +14,13 @@ public class PacketRegistry {
     public static final PacketRegistry LOGIN = login();
     public static final PacketRegistry PLAY = play();
 
-    // TODO avoid boxing
-    private final Map<String, Integer> incomingByName = new HashMap<>();
-    private final Map<Integer, String> incomingById = new HashMap<>();
-    private final Map<Integer, Supplier<Packet>> incomingSupplierMap = new HashMap<>();
+    private final ObjectIntHashMap<String> incomingByName = new ObjectIntHashMap<>();
+    private final IntObjectHashMap<String> incomingById = new IntObjectHashMap<>();
+    private final IntObjectHashMap<Supplier<Packet>> incomingSupplierMap = new IntObjectHashMap<>();
 
-    private final Map<String, Integer> outgoingByName = new HashMap<>();
-    private final Map<Integer, String> outgoingById = new HashMap<>();
-    private final Map<Integer, Supplier<Packet>> outgoingSupplierMap = new HashMap<>();
+    private final ObjectIntHashMap<String> outgoingByName = new ObjectIntHashMap<>();
+    private final IntObjectHashMap<String> outgoingById = new IntObjectHashMap<>();
+    private final IntObjectHashMap<Supplier<Packet>> outgoingSupplierMap = new IntObjectHashMap<>();
 
     public String getPacketName(PacketBound bound, int id) {
         return switch (bound) {
