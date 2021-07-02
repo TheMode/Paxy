@@ -7,8 +7,7 @@ import org.eclipse.collections.impl.map.mutable.primitive.ObjectIntHashMap;
 
 import java.util.function.Supplier;
 
-public class PacketRegistry {
-
+public final class PacketRegistry {
     public static final PacketRegistry HANDSHAKE = handshake();
     public static final PacketRegistry STATUS = status();
     public static final PacketRegistry LOGIN = login();

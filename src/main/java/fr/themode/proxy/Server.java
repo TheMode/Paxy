@@ -3,6 +3,9 @@ package fr.themode.proxy;
 import fr.themode.proxy.worker.Worker;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
+import java.net.UnixDomainSocketAddress;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
@@ -77,5 +80,15 @@ public final class Server {
     private Worker findWorker() {
         this.index = ++index % WORKER_COUNT;
         return workers.get(index);
+    }
+
+    record ProxyAddress(SocketAddress socketAddress) {
+        public static ProxyAddress inet(String host, int port) {
+            return new ProxyAddress(new InetSocketAddress(host, port));
+        }
+
+        public static ProxyAddress unix(String path) {
+            return new ProxyAddress(UnixDomainSocketAddress.of(path));
+        }
     }
 }

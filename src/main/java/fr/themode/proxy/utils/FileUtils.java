@@ -4,8 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 
-public class FileUtils {
-
+public final class FileUtils {
     public static String readFile(File file) {
         String fileString = null;
         try {

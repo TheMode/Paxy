@@ -3,8 +3,7 @@ package fr.themode.proxy.utils;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 
-public class ProtocolUtils {
-
+public final class ProtocolUtils {
     public static int readVarInt(ByteBuffer src) {
         // Code from https://github.com/bazelbuild/bazel/blob/master/src/main/java/com/google/devtools/build/lib/util/VarInt.java
         int tmp;

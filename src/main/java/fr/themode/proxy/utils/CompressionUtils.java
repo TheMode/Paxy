@@ -5,8 +5,7 @@ import java.util.zip.DataFormatException;
 import java.util.zip.Deflater;
 import java.util.zip.Inflater;
 
-public class CompressionUtils {
-
+public final class CompressionUtils {
     public static void compress(Deflater deflater, ByteBuffer input, ByteBuffer output) {
         deflater.setInput(input);
         deflater.finish();
