@@ -1,6 +1,6 @@
 package fr.themode.proxy;
 
-import fr.themode.proxy.protocol.packet.PacketRegistry;
+import fr.themode.proxy.packet.PacketRegistry;
 
 import java.util.Locale;
 

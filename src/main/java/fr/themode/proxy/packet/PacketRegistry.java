@@ -1,7 +1,7 @@
-package fr.themode.proxy.protocol.packet;
+package fr.themode.proxy.packet;
 
 import fr.themode.proxy.PacketBound;
-import fr.themode.proxy.protocol.packet.outgoing.play.OutChatMessagePacket;
+import fr.themode.proxy.packet.play.OutChatMessagePacket;
 import org.eclipse.collections.impl.map.mutable.primitive.IntObjectHashMap;
 import org.eclipse.collections.impl.map.mutable.primitive.ObjectIntHashMap;
 

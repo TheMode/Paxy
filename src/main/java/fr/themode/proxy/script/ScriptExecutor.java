@@ -4,7 +4,7 @@ import fr.themode.proxy.MinecraftBuffer;
 import fr.themode.proxy.PacketBound;
 import fr.themode.proxy.State;
 import fr.themode.proxy.connection.ConnectionContext;
-import fr.themode.proxy.protocol.packet.Packet;
+import fr.themode.proxy.packet.Packet;
 import org.eclipse.collections.impl.map.mutable.primitive.IntObjectHashMap;
 import org.graalvm.polyglot.Value;
 import org.graalvm.polyglot.proxy.ProxyObject;

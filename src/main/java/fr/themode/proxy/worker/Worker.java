@@ -3,7 +3,7 @@ package fr.themode.proxy.worker;
 import fr.themode.proxy.PacketBound;
 import fr.themode.proxy.Server;
 import fr.themode.proxy.connection.ConnectionContext;
-import fr.themode.proxy.protocol.ProtocolHandler;
+import fr.themode.proxy.connection.ProtocolHandler;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;

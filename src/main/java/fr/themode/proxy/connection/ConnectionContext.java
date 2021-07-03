@@ -2,9 +2,7 @@ package fr.themode.proxy.connection;
 
 import fr.themode.proxy.PacketBound;
 import fr.themode.proxy.State;
-import fr.themode.proxy.protocol.ProtocolFormat;
-import fr.themode.proxy.protocol.ProtocolHandler;
-import fr.themode.proxy.protocol.packet.PacketTransformer;
+import fr.themode.proxy.packet.PacketTransformer;
 import fr.themode.proxy.utils.ProtocolUtils;
 import fr.themode.proxy.worker.WorkerContext;
 

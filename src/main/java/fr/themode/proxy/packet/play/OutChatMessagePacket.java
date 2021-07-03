@@ -1,7 +1,7 @@
-package fr.themode.proxy.protocol.packet.outgoing.play;
+package fr.themode.proxy.packet.play;
 
 import fr.themode.proxy.MinecraftBuffer;
-import fr.themode.proxy.protocol.packet.Packet;
+import fr.themode.proxy.packet.Packet;
 
 import java.util.Map;
 import java.util.UUID;

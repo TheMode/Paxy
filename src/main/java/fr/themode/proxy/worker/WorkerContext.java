@@ -2,7 +2,7 @@ package fr.themode.proxy.worker;
 
 import fr.themode.proxy.Server;
 import fr.themode.proxy.connection.ConnectionContext;
-import fr.themode.proxy.protocol.ProtocolFormat;
+import fr.themode.proxy.connection.ProtocolFormat;
 import fr.themode.proxy.script.ScriptLocal;
 
 import java.nio.ByteBuffer;

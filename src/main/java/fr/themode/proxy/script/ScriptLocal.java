@@ -2,7 +2,7 @@ package fr.themode.proxy.script;
 
 import fr.themode.proxy.MinecraftBuffer;
 import fr.themode.proxy.connection.ConnectionContext;
-import fr.themode.proxy.protocol.packet.Packet;
+import fr.themode.proxy.packet.Packet;
 import fr.themode.proxy.utils.ProtocolUtils;
 
 import java.io.File;

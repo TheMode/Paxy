@@ -1,7 +1,6 @@
-package fr.themode.proxy.protocol;
+package fr.themode.proxy.connection;
 
 import fr.themode.proxy.State;
-import fr.themode.proxy.connection.ConnectionContext;
 import fr.themode.proxy.utils.ProtocolUtils;
 
 import java.nio.ByteBuffer;
