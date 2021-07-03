@@ -5,6 +5,7 @@ import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.HostAccess;
 import org.graalvm.polyglot.Source;
 import org.graalvm.polyglot.Value;
+import org.graalvm.polyglot.proxy.ProxyExecutable;
 
 import java.io.File;
 
@@ -70,7 +71,16 @@ public class Script {
                 .allowHostAccess(HostAccess.ALL)
                 .build();
         Value bindings = context.getBindings("js");
-        bindings.putMember("proxy", executor);
+        bindings.putMember("registerOutgoing", (ProxyExecutable) arguments -> {
+            executor.registerOutgoing(arguments[0].asString(), arguments[1].asString(),
+                    (connectionContext, polyglotPacket) -> arguments[2].execute(connectionContext, polyglotPacket));
+            return null;
+        });
+        bindings.putMember("registerIncoming", (ProxyExecutable) arguments -> {
+            executor.registerIncoming(arguments[0].asString(), arguments[1].asString(),
+                    (connectionContext, polyglotPacket) -> arguments[2].execute(connectionContext, polyglotPacket));
+            return null;
+        });
         return context;
     }
 }
