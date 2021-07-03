@@ -7,7 +7,6 @@ import java.util.Map;
 import java.util.UUID;
 
 public class OutChatMessagePacket extends Packet {
-
     private static final FieldMap<OutChatMessagePacket> FIELD_MAP = new FieldMap<>(OutChatMessagePacket.class,
             new FieldEntry<>("message", String.class, (packet) -> packet.message, (packet, value) -> packet.message = value),
             new FieldEntry<>("position", byte.class, (packet) -> packet.position, (packet, value) -> packet.position = value),
