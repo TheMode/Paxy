@@ -8,20 +8,14 @@ import java.util.UUID;
 
 public class OutChatMessagePacket extends Packet {
 
-    private static final FieldMap FIELD_MAP = new FieldMap();
+    private static final FieldMap<OutChatMessagePacket> FIELD_MAP = new FieldMap<>(OutChatMessagePacket.class,
+            new FieldEntry<>("message", String.class, (packet) -> packet.message, (packet, value) -> packet.message = value),
+            new FieldEntry<>("position", byte.class, (packet) -> packet.position, (packet, value) -> packet.position = value),
+            new FieldEntry<>("sender", UUID.class, (packet) -> packet.sender, (packet, value) -> packet.sender = value));
 
-    public String message;
-    public byte position;
-    public UUID sender;
-
-    static {
-        FIELD_MAP.registerField(OutChatMessagePacket.class, "message", String.class,
-                (packet) -> packet.message, (packet, value) -> packet.message = value);
-        FIELD_MAP.registerField(OutChatMessagePacket.class, "position", byte.class,
-                (packet) -> packet.position, (packet, value) -> packet.position = value);
-        FIELD_MAP.registerField(OutChatMessagePacket.class, "sender", UUID.class,
-                (packet) -> packet.sender, (packet, value) -> packet.sender = value);
-    }
+    private String message;
+    private byte position;
+    private UUID sender;
 
     @Override
     public void read(MinecraftBuffer in) {
