@@ -66,14 +66,8 @@ public class Script {
     }
 
     private static Context createContext(ScriptExecutor executor) {
-        HostAccess hostAccess = HostAccess.newBuilder(HostAccess.ALL).build();
         Context context = Context.newBuilder("js")
-                // Allows foreign object prototypes
-                .allowExperimentalOptions(true)
-                // Allows native js methods to be used on foreign (java) objects.
-                // For example, calling Array.prototype.filter on java lists.
-                .option("js.experimental-foreign-object-prototype", "true")
-                .allowHostAccess(hostAccess)
+                .allowHostAccess(HostAccess.ALL)
                 .build();
         Value bindings = context.getBindings("js");
         bindings.putMember("proxy", executor);
