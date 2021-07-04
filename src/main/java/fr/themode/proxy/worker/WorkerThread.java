@@ -11,8 +11,8 @@ public class WorkerThread extends Thread {
         super(null, runnable, "worker-" + COUNTER.getAndIncrement());
     }
 
-    protected static WorkerThread start(Consumer<WorkerContext> runnable) {
-        WorkerThread thread = new WorkerThread(() -> {
+    protected static void start(Consumer<WorkerContext> runnable) {
+        new WorkerThread(() -> {
             WorkerContext workerContext = new WorkerContext();
             while (true) {
                 try {
@@ -21,8 +21,6 @@ public class WorkerThread extends Thread {
                     e.printStackTrace();
                 }
             }
-        });
-        thread.start();
-        return thread;
+        }).start();
     }
 }

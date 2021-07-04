@@ -3,6 +3,7 @@ package fr.themode.proxy.script;
 import fr.themode.proxy.MinecraftBuffer;
 import fr.themode.proxy.connection.ConnectionContext;
 import fr.themode.proxy.packet.Packet;
+import fr.themode.proxy.utils.FileUtils;
 import fr.themode.proxy.utils.ProtocolUtils;
 
 import java.io.File;
@@ -51,11 +52,10 @@ public class ScriptLocal {
         }
 
         for (File file : folderFiles) {
-            final String name = file.getName();
             if (file.isDirectory()) {
                 continue;
             }
-            Script script = new Script(name, file);
+            Script script = new Script(FileUtils.readFile(file));
             this.scripts.add(script);
             // Evaluate the script (start registering listeners)
             script.load();

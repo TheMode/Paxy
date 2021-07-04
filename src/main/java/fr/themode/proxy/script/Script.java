@@ -1,31 +1,21 @@
 package fr.themode.proxy.script;
 
-import fr.themode.proxy.utils.FileUtils;
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.HostAccess;
 import org.graalvm.polyglot.Source;
 import org.graalvm.polyglot.Value;
 import org.graalvm.polyglot.proxy.ProxyExecutable;
 
-import java.io.File;
-
 public class Script {
 
     private final ScriptExecutor executor = new ScriptExecutor();
-
-    private final String name;
     private final String fileString;
 
     private boolean loaded;
     private volatile Context context;
 
-    public Script(String name, String fileString) {
-        this.name = name;
+    public Script(String fileString) {
         this.fileString = fileString;
-    }
-
-    public Script(String name, File file) {
-        this(name, FileUtils.readFile(file));
     }
 
     public void load() {
@@ -48,22 +38,6 @@ public class Script {
 
     public ScriptExecutor getExecutor() {
         return executor;
-    }
-
-    public String getFileString() {
-        return fileString;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public boolean isLoaded() {
-        return loaded;
-    }
-
-    public Context getContext() {
-        return context;
     }
 
     private static Context createContext(ScriptExecutor executor) {
