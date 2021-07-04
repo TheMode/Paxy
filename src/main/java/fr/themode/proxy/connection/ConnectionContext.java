@@ -5,12 +5,14 @@ import fr.themode.proxy.State;
 import fr.themode.proxy.packet.PacketTransformer;
 import fr.themode.proxy.utils.ProtocolUtils;
 import fr.themode.proxy.worker.WorkerContext;
+import org.graalvm.polyglot.proxy.ProxyObject;
 
 import java.io.IOException;
 import java.nio.BufferOverflowException;
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
+import java.util.HashMap;
 
 public class ConnectionContext {
 
@@ -20,6 +22,8 @@ public class ConnectionContext {
     private final SocketChannel target;
     private final ProtocolHandler handler;
     private final PacketBound packetBound;
+
+    private final ProxyObject properties = ProxyObject.fromMap(new HashMap<>());
 
     private State state = State.HANDSHAKE;
     private boolean compression = false;
@@ -132,6 +136,10 @@ public class ConnectionContext {
         }
         buffer.put(cacheBuffer);
         this.cacheBuffer = null;
+    }
+
+    public ProxyObject getProperties() {
+        return properties;
     }
 
     public State getState() {

@@ -15,7 +15,6 @@ import java.util.Map;
 import java.util.function.BiConsumer;
 
 public class ScriptExecutor {
-
     private final IntObjectHashMap<List<PacketListener>> outgoingListeners = new IntObjectHashMap<>();
     private final IntObjectHashMap<List<PacketListener>> incomingListeners = new IntObjectHashMap<>();
 
@@ -43,11 +42,12 @@ public class ScriptExecutor {
             return;
         }
         packet.ensureInitialization(in);
+        final var properties = context.getProperties();
         final var polyglotPacket = new PolyglotPacket(packet);
-        listeners.forEach(listener -> listener.accept(context, polyglotPacket));
+        listeners.forEach(listener -> listener.accept(properties, polyglotPacket));
     }
 
-    public interface PacketListener extends BiConsumer<ConnectionContext, PolyglotPacket> {
+    public interface PacketListener extends BiConsumer<ProxyObject, PolyglotPacket> {
     }
 
     static class PolyglotPacket implements ProxyObject {
@@ -81,5 +81,4 @@ public class ScriptExecutor {
             field.setter().accept(packet, casted);
         }
     }
-
 }
