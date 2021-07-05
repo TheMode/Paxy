@@ -12,7 +12,6 @@ import java.nio.BufferOverflowException;
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
-import java.util.HashMap;
 
 public class ConnectionContext {
 
@@ -22,8 +21,7 @@ public class ConnectionContext {
     private final SocketChannel target;
     private final ProtocolHandler handler;
     private final PacketBound packetBound;
-
-    private final ProxyObject properties = ProxyObject.fromMap(new HashMap<>());
+    private final ProxyObject properties;
 
     private State state = State.HANDSHAKE;
     private boolean compression = false;
@@ -32,10 +30,12 @@ public class ConnectionContext {
     private ByteBuffer cacheBuffer;
     private ConnectionContext targetConnectionContext;
 
-    public ConnectionContext(SocketChannel target, ProtocolHandler handler, PacketBound packetBound) {
+    public ConnectionContext(SocketChannel target, ProtocolHandler handler, PacketBound packetBound,
+                             ProxyObject properties) {
         this.target = target;
         this.handler = handler;
         this.packetBound = packetBound;
+        this.properties = properties;
     }
 
     public void processPackets(WorkerContext workerContext) {

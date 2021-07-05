@@ -4,12 +4,14 @@ import fr.themode.proxy.PacketBound;
 import fr.themode.proxy.Server;
 import fr.themode.proxy.connection.ConnectionContext;
 import fr.themode.proxy.connection.ProtocolHandler;
+import org.graalvm.polyglot.proxy.ProxyObject;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -79,8 +81,9 @@ public class Worker {
     }
 
     public void receiveConnection(SocketChannel clientChannel, SocketChannel serverChannel) throws IOException {
-        var clientContext = new ConnectionContext(serverChannel, ProtocolHandler.CLIENT, PacketBound.IN);
-        var serverContext = new ConnectionContext(clientChannel, ProtocolHandler.SERVER, PacketBound.OUT);
+        var properties = ProxyObject.fromMap(new HashMap<>());
+        var clientContext = new ConnectionContext(serverChannel, ProtocolHandler.CLIENT, PacketBound.IN, properties);
+        var serverContext = new ConnectionContext(clientChannel, ProtocolHandler.SERVER, PacketBound.OUT, properties);
 
         clientContext.setTargetConnectionContext(serverContext);
         serverContext.setTargetConnectionContext(clientContext);
